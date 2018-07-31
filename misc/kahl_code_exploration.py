@@ -55,7 +55,7 @@ def getMagSpec(sig, rate, winlen, winstep, NFFT):
 #0.05, 0.0097, 5s
 #0.05, 0.0195, 10s
 #0.05, 0.0585, 30s
-def getMultiSpec(path, seconds=5, overlap=4, minlen=3, winlen=0.05, winstep=0.0097, NFFT=840):
+def get_multi_spec(path, seconds=3, overlap=2, minlen=3, winlen=0.05, winstep=0.00585, NFFT=840):
 
     # open wav file
     (rate,sig) = wave.read(path)
@@ -119,7 +119,7 @@ def filter_isolated_cells(array, struct):
     return filtered_array
 
 # decide if given spectrum shows noise of interest or background sound only
-def hasNOI(spec, threshold=16):
+def has_monkey(spec, threshold=16):
 
     # working copy
     img = spec.copy()
@@ -183,6 +183,16 @@ IM_AUGMENTATION = {#'type':[probability, value]
                    #'flip': [0.25, 1]
                    }
 
+#gaussian noise
+if 'noise' in AUG and RANDOM.choice([True, False], p=[AUG['noise'][0], 1 - AUG['noise'][0]]):
+    img += RANDOM.normal(0.0, RANDOM.uniform(0, AUG['noise'][1]**0.5), img.shape)
+    img = np.clip(img, 0.0, 1.0)
+
+#add noise samples
+if 'noise_samples' in AUG and RANDOM.choice([True, False], p=[AUG['noise_samples'][0], 1 - AUG['noise_samples'][0]]):
+    img += openImage(NOISE[RANDOM.choice(range(0, len(NOISE)))], True) * AUG['noise_samples'][1]
+    img -= img.min(axis=None)
+    img /= img.max(axis=None)
 
 
 #elist all bird species

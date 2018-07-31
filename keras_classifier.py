@@ -6,7 +6,7 @@
 # Date: 13.06.18
 
 # Will be run from code directory in project i.e. 
-# /home/dgabutler/CMEECourseWork/Project/Code/
+# /home/dgabutler/Work/CMEEProject/Code/
 # HOWEVER: at present, no relative paths
 
 import numpy as np # following all used by train_simple_keras
@@ -25,7 +25,7 @@ warnings.filterwarnings('ignore')
 
 import os
 import sys 
-sys.path.insert(0, '/home/dgabutler/CMEECourseWork/Project/Code')
+sys.path.insert(0, '/home/dgabutler/Work/CMEEProject/Code')
 import wavtools # contains custom functions e.g. denoising
 
 from   pydub import AudioSegment # used by: search_file_
@@ -37,6 +37,7 @@ import subprocess # used by: search_file_
 import time # used by: search_folder_
 import pathlib # used by: search_file_
 import csv # used by: search_file_
+import matplotlib.pyplot as plt # used by train_simple_
 
 def precision(y_true, y_pred):
     """Precision metric.
@@ -87,11 +88,8 @@ def train_simple_keras(dataset, name, train_perc, num_epochs, batch_size):
     X_test = np.array([x.reshape( (128, 282, 1) ) for x in X_test])
 
     # one-hot encoding for classes
-    y_train = np.array(keras.utils.to_categorical(y_train))
-    y_test = np.array(keras.utils.to_categorical(y_test))
-
-    print y_train 
-    print y_test 
+    y_train = np.array(keras.utils.to_categorical(y_train, 2))
+    y_test = np.array(keras.utils.to_categorical(y_test, 2))
 
     model = Sequential()
     input_shape=(128, 282, 1)
@@ -108,21 +106,21 @@ def train_simple_keras(dataset, name, train_perc, num_epochs, batch_size):
     model.add(Activation('relu'))
 
     model.add(Flatten())
-    model.add(Dropout(rate=0.5))
+    model.add(Dropout(rate=0.6152916582980337)) # from hyperas
 
     model.add(Dense(64))
     model.add(Activation('relu'))
-    model.add(Dropout(rate=0.5))
+    model.add(Dropout(rate=0.23855852860918042)) # from hyperas
 
-    model.add(Dense(1))
+    model.add(Dense(2))
     model.add(Activation('softmax'))
 
     model.compile(
         optimizer="Adam",
         loss="binary_crossentropy",
-        metrics=[precision, recall])
+        metrics=['accuracy', precision, recall]) 
 
-    model.fit(
+    history = model.fit( # was 'model.fit('
         x=X_train, 
         y=y_train,
         epochs=num_epochs,
@@ -133,6 +131,36 @@ def train_simple_keras(dataset, name, train_perc, num_epochs, batch_size):
         x=X_test,
         y=y_test)
 
+    # list all data in history
+    print history.history.keys() # added 
+
+    # summarize history for accuracy
+    plt.plot(history.history['acc'])
+    plt.plot(history.history['val_acc'])
+    plt.title('model '+name+''+'_e'+str(num_epochs)+'_b'+str(batch_size)+' accuracy')
+    plt.ylabel('accuracy')
+    plt.xlabel('epoch')
+    plt.legend(['train', 'test'], loc='upper left')
+    plt.show()
+
+    # summarize history for loss
+    plt.plot(history.history['loss'])
+    plt.plot(history.history['val_loss'])
+    plt.title('model '+name+''+'_e'+str(num_epochs)+'_b'+str(batch_size)+' loss')
+    plt.ylabel('loss')
+    plt.xlabel('epoch')
+    plt.legend(['train', 'test'], loc='upper left')
+    plt.show()
+
+    # summarize history for recall
+    plt.plot(history.history['recall'])
+    plt.plot(history.history['val_recall'])
+    plt.title('model '+name+''+'_e'+str(num_epochs)+'_b'+str(batch_size)+' recall')
+    plt.ylabel('recall')
+    plt.xlabel('epoch')
+    plt.legend(['train', 'test'], loc='upper left')
+    plt.show()
+
     print '\nlearning rate:', str(K.eval(model.optimizer.lr))
 
     print 'test loss:', score[0]
@@ -140,7 +168,7 @@ def train_simple_keras(dataset, name, train_perc, num_epochs, batch_size):
 
     # serialise model to JSON
     dataset_name = name
-    save_path = '/home/dgabutler/CMEECourseWork/Project/Models/'+dataset_name+'/'
+    save_path = '/home/dgabutler/Work/CMEEProject/Models/'+dataset_name+'/'
     if not os.path.exists(save_path):
         os.makedirs(save_path)
     model_json = model.to_json()
@@ -154,7 +182,7 @@ def load_keras_model(dataset, model_name):
     """
     Loads pretrained model from disk for a given dataset type.
     """    
-    folder_path = '/home/dgabutler/CMEECourseWork/Project/Models/'
+    folder_path = '/home/dgabutler/Work/CMEEProject/Models/'
     try:
         json_file = open(folder_path + dataset + '/' + model_name + '_model.json', 'r')
     except IOError:
@@ -181,7 +209,7 @@ def search_file_for_monkeys(file_name, threshold_confidence, wav_folder, model, 
     These clips are then able to be fed in as negative examples, to
     improve the discriminatory capability of the network 
 
-    Example call: search_file_for_monkeys('5A3AD7A6', 60, '/home/dgabutler/CMEECourseWork/Project/Data/unclipped-whinnies/shady-lane/')
+    Example call: search_file_for_monkeys('5A3AD7A6', 60, '/home/dgabutler/Work/CMEEProject/Data/unclipped-whinnies/shady-lane/')
     """
     audio_folder = wav_folder
     # isolate folder name from path:
@@ -200,7 +228,7 @@ def search_file_for_monkeys(file_name, threshold_confidence, wav_folder, model, 
 
     # if hard-negative mining, test for presence of praat file early for efficiency:
     if hnm:
-        praat_file_path = '/home/dgabutler/CMEECourseWork/Project/Data/praat-files/'+file_name+'.TextGrid'
+        praat_file_path = '/home/dgabutler/Work/CMEEProject/Data/praat-files/'+file_name+'.TextGrid'
         try:
             labelled_starts = wavtools.whinny_starttimes_from_praatfile(praat_file_path)[1]
 
@@ -256,7 +284,7 @@ def search_file_for_monkeys(file_name, threshold_confidence, wav_folder, model, 
             if not hnm:
                 # suspected positives moved to folder in Results, files renamed 'filename_numcallinfile_confidence.WAV'
                 # results_dir = '/media/dgabutler/My Passport/Audio/detected-positives/'+isolated_folder_name+'-results'
-                results_dir = '/home/dgabutler/CMEECourseWork/Project/Results/detected-positives/'+isolated_folder_name+'-results'
+                results_dir = '/home/dgabutler/Work/CMEEProject/Results/detected-positives/'+isolated_folder_name+'-results'
 
                 if not os.path.exists(results_dir):
                     os.makedirs(results_dir)
@@ -264,7 +292,7 @@ def search_file_for_monkeys(file_name, threshold_confidence, wav_folder, model, 
 
                 # making summary file 
                 if summary_file:
-                    summary_file_name = '/home/dgabutler/CMEECourseWork/Project/Results/'+isolated_folder_name+'-results-summary.csv'
+                    summary_file_name = '/home/dgabutler/Work/CMEEProject/Results/'+isolated_folder_name+'-results-summary.csv'
                     # obtain datetime from file name if possible 
                     try:
                         datetime_of_recording = wavtools.filename_to_localdatetime(file_name)
@@ -302,7 +330,7 @@ def search_file_for_monkeys(file_name, threshold_confidence, wav_folder, model, 
                     # i.e. if section has not been labelled as containing a call
                     # (therefore a false positive has been detected)
                     hnm_counter+=1
-                    copyfile(clipped_wavs[idx], '/home/dgabutler/CMEECourseWork/Project/Data/mined-false-positives/'+file_name+'_'+str(hnm_counter)+'_'+approx_position+'_'+str(int(round(predicted[0][1]*100)))+'.WAV')
+                    copyfile(clipped_wavs[idx], '/home/dgabutler/Work/CMEEProject/Data/mined-false-positives/'+file_name+'_'+str(hnm_counter)+'_'+approx_position+'_'+str(int(round(predicted[0][1]*100)))+'.WAV')
                 else: continue     
 
         # if full_verbose:
@@ -353,19 +381,149 @@ def search_folder_for_monkeys(wav_folder, threshold_confidence, model):
     toc = time.time()
     print '\nsystem took', round((toc-tic)/60, 3), 'mins to process', len(wavs), 'files\n\nfor a summary of results, see the csv file created in Results folder\n' 
 
-## NB.! time per file is approx. 1.553 seconds. 
-## resulting in time per folder (~4000 files) of approx. 1.75 hours 
+# ## NB.! time per file is approx. 1.553 seconds. 
+# ## resulting in time per folder (~4000 files) of approx. 1.75 hours 
 
-def search_file_list_for_monkeys(file_names_list, wav_folder, threshold_confidence, model):
-    """
-    Search a list of provided file names for positives at given confidence
-    """
-    for name in file_names_list:
-        try:
-            search_file_for_monkeys(name, wav_folder=wav_folder, threshold_confidence=threshold_confidence, model=model, full_verbose=False)
-        except IOError:
-            print 'error: no file named', name
-            continue 
+# def search_file_list_for_monkeys(file_names_list, wav_folder, threshold_confidence, model):
+#     """
+#     Search a list of provided file names for positives at given confidence
+#     """
+#     for name in file_names_list:
+#         try:
+#             search_file_for_monkeys(name, wav_folder=wav_folder, threshold_confidence=threshold_confidence, model=model, full_verbose=False)
+#         except IOError:
+#             print 'error: no file named', name
+#             continue 
+
+
+
+
+
+
+# ########################## REMOVE THIS SECTION WHEN I'VE STOPPED EXPERIMENTING WITH IT ####################################################
+# import os 
+# import sys
+# import csv 
+# import glob
+# import random
+# import pickle
+# import time
+
+# sys.path.insert(0, '/home/dgabutler/Work/CMEEProject/Code')
+# import wavtools   # contains custom functions e.g. denoising
+
+# praat_files = sorted(os.listdir('/home/dgabutler/Work/CMEEProject/Data/praat-files'))
+
+# # # dataset 
+# D_original = [] 
+
+# # # - ADD POSITIVES - 
+# # # 1) generate positive clips
+# # wavtools.clip_whinnies(praat_files)
+# # # 2) add clips to dataset
+# wavtools.add_files_to_dataset(folder='clipped-whinnies', dataset=D_original, example_type=1)
+# # # - ADD NEGATIVES - 
+# # # 1) generate negative clips
+# # # a) populate folder with sections of various lengths known to not contain calls
+# # # wavtools.clip_noncall_sections(praat_files)
+# # # b) clip the beginning of each of these into 3 second clips
+# # # noncall_files = sorted(os.listdir('/home/dgabutler/Work/CMEEProject/Data/sections-without-whinnies'))
+# # # wavtools.generate_negative_examples(noncall_files, 3.00)
+# # # 2) add negative clips to dataset
+# wavtools.add_files_to_dataset(folder='clipped-negatives', dataset=D_original, example_type=0)
+
+# # print("\nNumber of samples currently in original dataset: " + str(wavtools.num_examples(D_original,0)) + \
+# # " negative, " + str(wavtools.num_examples(D_original,1)) + " positive")
+
+# # # method 2: applying denoising to the spectrograms
+
+# D_denoised = wavtools.denoise_dataset(D_original)
+
+# # # method 3: adding augmented (time-shifted) data
+
+# D_aug_t = D_original 
+
+# # wavtools.add_files_to_dataset(folder='aug-timeshifted', dataset=D_aug_t, example_type=1)
+
+# # print("\nNumber of samples when positives augmented (time): " + str(wavtools.num_examples(D_aug_t,0)) + \
+# # " negative, " + str(wavtools.num_examples(D_aug_t,1)) + " positive")
+
+# # # # method 3.5: adding augmented (blended) data
+
+# # # D_aug_tb = D_aug_t
+
+# # # wavtools.add_files_to_dataset(folder='aug-blended', dataset=D_aug_tb, example_type=1)
+
+# # # print("\nNumber of samples when positives augmented (time shift and blended): " + str(wavtools.num_examples(D_aug_tb,0)) + \
+# # # " negative, " + str(wavtools.num_examples(D_aug_tb,1)) + " positive")
+
+# # # method 4: augmented (both) and denoised
+
+# # # D_aug_t_denoised = wavtools.denoise_dataset(D_aug_t)
+# # # D_aug_tb_denoised = wavtools.denoise_dataset(D_aug_tb)
+
+# # # method 5: adding hard-negative mined training examples 
+
+# # # # hard_negative_miner('/home/dgabutler/Work/CMEEProject/Data/unclipped-whinnies/', 62, model=loaded_model)
+# # # D_mined_aug_tb = D_aug_tb 
+# # # wavtools.add_files_to_dataset(folder='mined-false-positives', dataset=D_mined_aug_tb, example_type=0)
+
+# # # print("\nNumber of samples when hard negatives added: " + str(wavtools.num_examples(D_mined_aug_tb,0)) + \
+# # # " negative, " + str(wavtools.num_examples(D_mined_aug_tb,1)) + " positive")
+
+# # # D_mined_aug_tb_denoised = wavtools.denoise_dataset(D_mined_aug_tb)
+
+# # # method 6: adding selected obvious false positives as training examples
+
+# # D_S_mined_aug_t_denoised = D_aug_t
+
+# # wavtools.add_files_to_dataset(folder='selected-false-positives', dataset=D_S_mined_aug_t_denoised, example_type=0)
+
+# # print("\nNumber of samples when select negatives added: " + str(wavtools.num_examples(D_S_mined_aug_t_denoised,0)) + \
+# # " negative, " + str(wavtools.num_examples(D_S_mined_aug_t_denoised,1)) + " positive")
+
+# # # method 7: adding 'most wrong' false positives as training examples
+
+# # # tried ~100 negatives from Catappa, ~100 positives that I had 
+# # # DID NOT WORK. great results but background noise between positives and negatives was too different to generalise
+# # # workflow was:
+# # D_MW_mined = []
+# # wavtools.add_files_to_dataset(folder='clipped-whinnies', dataset=D_MW_mined, example_type=1)
+# # wavtools.add_files_to_dataset(folder='selected-false-positives/from-unclipped-whinnies', dataset=D_MW_mined, example_type=0)
+# # wavtools.add_files_to_dataset(folder='selected-false-positives/catappa2-from-jenna', dataset=D_MW_mined, example_type=0)
+# # D_MW_mined_denoised = wavtools.denoise_dataset(D_MW_mined)
+
+# # need to include examples from variety of recorders + background noises. should I batch-normalize??
+# D_MW_mined_aug_t = []
+# wavtools.add_files_to_dataset(folder='clipped-whinnies', dataset=D_MW_mined_aug_t, example_type=1)
+# wavtools.add_files_to_dataset(folder='selected-false-positives/from-unclipped-whinnies', dataset=D_MW_mined_aug_t, example_type=0)
+# wavtools.add_files_to_dataset(folder='selected-false-positives/catappa2-from-jenna', dataset=D_MW_mined_aug_t, example_type=0)
+# # wavtools.augment_folder_time_shift(0.3, 1)
+# wavtools.add_files_to_dataset(folder='aug-timeshifted', dataset=D_MW_mined_aug_t, example_type=1)
+# wavtools.add_files_to_dataset(folder='clipped-negatives', dataset=D_MW_mined_aug_t, example_type=0)
+
+# D_MW_mined_aug_t_denoised = wavtools.denoise_dataset(D_MW_mined_aug_t)
+
+# print("\nNumber of samples when select negatives added: " + str(wavtools.num_examples(D_MW_mined_aug_t,0)) + \
+# " negative, " + str(wavtools.num_examples(D_MW_mined_aug_t,1)) + " positive")
+
+
+# #################################################################
+# ####################### -- TRAINING -- ##########################
+
+# # (NB. already have model saved, running below will overwrite)
+# train_simple_keras(D_denoised,'D_denoised',0.85, num_epochs=50, batch_size=32)
+
+# # ###########################################################################################################################################
+
+# # #################################################################
+# # ##################### -- PREDICTING -- ##########################
+
+# ###### LOADING TRAINED MODEL
+# loaded_model = load_keras_model('D_denoised', 'e50_b32')
+
+# search_folder_for_monkeys('/home/dgabutler/Work/CMEEProject/Data/dummy/', 70, model=loaded_model)
+
 
 
 #################################################################
@@ -565,7 +723,7 @@ def search_file_list_for_monkeys(file_names_list, wav_folder, threshold_confiden
 
     # serialise model to JSON
     # dataset_name = name
-    # save_path = '/home/dgabutler/CMEECourseWork/Project/Models/'+dataset_name+'/'
+    # save_path = '/home/dgabutler/Work/CMEEProject/Models/'+dataset_name+'/'
     # if not os.path.exists(save_path):
     #     os.makedirs(save_path)
     # model_json = model.to_json()

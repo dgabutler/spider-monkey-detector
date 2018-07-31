@@ -11,7 +11,7 @@ import random
 import pickle
 import time
 
-sys.path.insert(0, '/home/dgabutler/CMEECourseWork/Project/Code')
+sys.path.insert(0, '/home/dgabutler/Work/CMEEProject/Code')
 import wavtools   # contains custom functions e.g. denoising
 import keras_classifier
 
@@ -21,27 +21,27 @@ loaded_model = keras_classifier.load_keras_model('D_mined_aug_tb_denoised', 'e50
 #################################################################
 ###################### -- WRANGLING -- ##########################
 
-praat_files = sorted(os.listdir('/home/dgabutler/CMEECourseWork/Project/Data/praat-files'))
+praat_files = sorted(os.listdir('/home/dgabutler/Work/CMEEProject/Data/praat-files'))
 
 # ########## HARD NEGATIVE MINING
 
-# # keras_classifier.hard_negative_miner(wav_folder='/home/dgabutler/CMEECourseWork/Project/Data/unclipped-whinnies/', threshold_confidence=70)
+# # keras_classifier.hard_negative_miner(wav_folder='/home/dgabutler/Work/CMEEProject/Data/unclipped-whinnies/', threshold_confidence=70)
 
 # #################################################################
 # ##################### -- AUGMENTING -- ##########################
 
 # ################### RANDOM TIME SHIFT ###########
 
-# # file_names = [os.path.splitext(x)[0] for x in praat_files]
-# # for file in file_names:
-# #     wavtools.augment_time_shift(file, 3000, 0.2, 2)
+# file_names = [os.path.splitext(x)[0] for x in praat_files]
+# for file in file_names:
+#     wavtools.augment_time_shift(file, 3000, 0.3, 1)
 
 # ################### FILE BLENDING ################
 
 # # - wrangling non-monkey noises 
 # # - file names from excel sheet
 # # file_list = []
-# # with open('/home/dgabutler/CMEECourseWork/Project/Data/misc/file-names-to-mine-for-non-monkey-noises.csv', 'rb') as f:
+# # with open('/home/dgabutler/Work/CMEEProject/Data/misc/file-names-to-mine-for-non-monkey-noises.csv', 'rb') as f:
 # #     reader = csv.reader(f)
 # #     file_list = list(reader)
 # # files_to_mine = [item for sublist in file_list for item in sublist]
@@ -54,11 +54,11 @@ praat_files = sorted(os.listdir('/home/dgabutler/CMEECourseWork/Project/Data/pra
 # # wavtools.clip_long_into_snippets('/media/dgabutler/My Passport/Audio/Catappa/5A3CE5B0.WAV', 3)
 # # # move four good clips to folder:
 # # from shutil import copyfile
-# # data_path = '/home/dgabutler/CMEECourseWork/Project/Data'
+# # data_path = '/home/dgabutler/Work/CMEEProject/Data'
 # # for i in xrange(4):
 # #     copyfile(data_path+'/snippets/5A3CE5B0/5A3CE5B0_clip0'+str(i+6)+'.wav', data_path+'/non-monkey-noises/5A3CE5B0_howler'+str(i+1)+'.WAV')
 
-# whinny_files = glob.glob('/home/dgabutler/CMEECourseWork/Project/Data/clipped-whinnies/*.WAV')
+# whinny_files = glob.glob('/home/dgabutler/Work/CMEEProject/Data/clipped-whinnies/*.WAV')
 # # for whinny in whinny_files:
 # #     wavtools.augment_file_blend(whinny)
 
@@ -74,7 +74,7 @@ D_original = []
 
 # - ADD POSITIVES - 
 # 1) generate positive clips
-# wavtools.clip_whinnies(praat_files)
+wavtools.clip_whinnies(praat_files, 3)
 # 2) add clips to dataset
 wavtools.add_files_to_dataset(folder='clipped-whinnies', dataset=D_original, example_type=1)
 # - ADD NEGATIVES - 
@@ -82,7 +82,7 @@ wavtools.add_files_to_dataset(folder='clipped-whinnies', dataset=D_original, exa
 # a) populate folder with sections of various lengths known to not contain calls
 # wavtools.clip_noncall_sections(praat_files)
 # b) clip the beginning of each of these into 3 second clips
-# noncall_files = sorted(os.listdir('/home/dgabutler/CMEECourseWork/Project/Data/sections-without-whinnies'))
+# noncall_files = sorted(os.listdir('/home/dgabutler/Work/CMEEProject/Data/sections-without-whinnies'))
 # wavtools.generate_negative_examples(noncall_files, 3.00)
 # 2) add negative clips to dataset
 wavtools.add_files_to_dataset(folder='clipped-negatives', dataset=D_original, example_type=0)
@@ -112,13 +112,14 @@ wavtools.add_files_to_dataset(folder='aug-blended', dataset=D_aug_tb, example_ty
 print("\nNumber of samples when positives augmented (time shift and blended): " + str(wavtools.num_examples(D_aug_tb,0)) + \
 " negative, " + str(wavtools.num_examples(D_aug_tb,1)) + " positive")
 
-# method 4: augmented and denoised
+# method 4: augmented (both) and denoised
 
+D_aug_t_denoised = wavtools.denoise_dataset(D_aug_t)
 D_aug_tb_denoised = wavtools.denoise_dataset(D_aug_tb)
 
 # method 5: adding hard-negative mined training examples 
 
-# keras_classifier.hard_negative_miner('/home/dgabutler/CMEECourseWork/Project/Data/unclipped-whinnies/', 62, model=loaded_model)
+# keras_classifier.hard_negative_miner('/home/dgabutler/Work/CMEEProject/Data/unclipped-whinnies/', 62, model=loaded_model)
 D_mined_aug_tb = D_aug_tb 
 wavtools.add_files_to_dataset(folder='mined-false-positives', dataset=D_mined_aug_tb, example_type=0)
 
@@ -127,18 +128,21 @@ print("\nNumber of samples when hard negatives added: " + str(wavtools.num_examp
 
 D_mined_aug_tb_denoised = wavtools.denoise_dataset(D_mined_aug_tb)
 
-# # method 6: adding selected obvious false positives as training examples
+# method 6: adding selected obvious false positives as training examples
 
-# # D_S_mined_aug_denoised = D_mined_aug_denoised
+D_S_mined_aug_t_denoised = D_aug_t
 
-# # wavtools.add_files_to_dataset(folder='selected-false-positives', dataset=S_mined_aug_denoised, example_type=0)
+wavtools.add_files_to_dataset(folder='selected-false-positives', dataset=D_S_mined_aug_t_denoised, example_type=0)
+
+print("\nNumber of samples when select negatives added: " + str(wavtools.num_examples(D_S_mined_aug_t_denoised,0)) + \
+" negative, " + str(wavtools.num_examples(D_S_mined_aug_t_denoised,1)) + " positive")
 
 
 # #################################################################
 # ####################### -- TRAINING -- ##########################
 
 # # (NB. already have model saved, running below will overwrite)
-keras_classifier.train_simple_keras(D_original,'D_original',0.85, num_epochs=1, batch_size=32)
+keras_classifier.train_simple_keras(D_S_mined_aug_t_denoised,'D_S_mined_aug_t_denoised',0.85, num_epochs=20, batch_size=64)
 
 # # pulling to one side 1000 files from each of 3 folders, 
 # # running search_file_list_for_monkeys on them:
@@ -160,10 +164,10 @@ keras_classifier.train_simple_keras(D_original,'D_original',0.85, num_epochs=1, 
 # # random_files_scanned.append(rand_1000_teak1)
 # # random_files_scanned.append(rand_1000_teak2)
 
-# # with open('/home/dgabutler/CMEECourseWork/Project/Data/misc/list_of_random_files_scanned.pkl', 'wb') as fp:
+# # with open('/home/dgabutler/Work/CMEEProject/Data/misc/list_of_random_files_scanned.pkl', 'wb') as fp:
 # #     pickle.dump(random_files_scanned, fp)
 
-# # with open('/home/dgabutler/CMEECourseWork/Project/Data/misc/list_of_random_files_scanned.pkl', 'rb') as fp:
+# # with open('/home/dgabutler/Work/CMEEProject/Data/misc/list_of_random_files_scanned.pkl', 'rb') as fp:
 # #     random_files = pickle.load(fp)
 
 # ## testing:
@@ -204,10 +208,10 @@ keras_classifier.train_simple_keras(D_original,'D_original',0.85, num_epochs=1, 
 #################################################################
 ###################### -- PREDICTING -- #########################
 
-wav_folder = '/home/dgabutler/CMEECourseWork/Project/Data/unclipped-whinnies/shady-lane/'
+wav_folder = '/home/dgabutler/Work/CMEEProject/Data/unclipped-whinnies/shady-lane/'
 keras_classifier.search_file_for_monkeys(file_name, wav_folder, threshold_confidence)
 
-keras_classifier.search_folder_for_monkeys('/home/dgabutler/CMEECourseWork/Project/Data/unclipped-whinnies/', 70, model=loaded_model)
+keras_classifier.search_folder_for_monkeys('/home/dgabutler/Work/CMEEProject/Data/unclipped-whinnies/', 95, model=loaded_model)
 # keras_classifier.search_folder_for_monkeys(wav_folder=wav_folder,threshold_confidence=80)
 
 #################################################################
@@ -226,14 +230,4 @@ keras_classifier.search_folder_for_monkeys('/home/dgabutler/CMEECourseWork/Proje
 
 # reading back in pickle file:
 # see https://stackoverflow.com/questions/899103/writing-a-list-to-a-file-with-python
-
-# # # Example spectrogram
-# # y, sr = librosa.load('/home/dgabutler/CMEECourseWork/Project/Data/clipped-whinnies/5A3AD5B6_1.WAV', duration=3.00, sr=None)
-# # ps = librosa.feature.melspectrogram(y=y, sr=sr)
-# # ps.shape
-
-# # currently doesn't display for venv reasons, but if I get time
-# # should use https://github.com/conda-forge/glib-feedstock/issues/19
-# # to solve it 
-# # librosa.display.specshow(ps, y_axis='mel', x_axis='time')
 

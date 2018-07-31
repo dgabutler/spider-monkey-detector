@@ -54,7 +54,7 @@ def clip_long_into_snippets(file_name, duration):
     Stores clips in custom-labelled folder within 'snippets' directory.
     """
     isolated_name = os.path.basename(os.path.splitext(file_name)[0])
-    clip_dir = '/home/dgabutler/CMEECourseWork/Project/Data/snippets/'+isolated_name+'/'
+    clip_dir = '/home/dgabutler/Work/CMEEProject/Data/snippets/'+isolated_name+'/'
     if not os.path.exists(clip_dir):
         os.makedirs(clip_dir)
     try:
@@ -231,16 +231,16 @@ def clip_whinnies(praat_files, desired_duration):
     """
     Clip all whinnies from wav files, following labels in praat files, to specified length.
 
-    praat_files = sorted(os.listdir('/home/dgabutler/CMEECourseWork/Project/Data/praat-files'))
+    praat_files = sorted(os.listdir('/home/dgabutler/Work/CMEEProject/Data/praat-files'))
 
     """
-    unclipped_folder = '/home/dgabutler/CMEECourseWork/Project/Data/unclipped-whinnies'
-    clipped_folder_whinnies = '/home/dgabutler/CMEECourseWork/Project/Data/clipped-whinnies'
+    unclipped_folder = '/home/dgabutler/Work/CMEEProject/Data/unclipped-whinnies'
+    clipped_folder_whinnies = '/home/dgabutler/Work/CMEEProject/Data/clipped-whinnies'
 
     for file in praat_files:
 
-        start_times = wavtools.whinny_starttimes_from_praatfile('/home/dgabutler/CMEECourseWork/Project/Data/praat-files/'+file)
-        end_times = wavtools.whinny_endtimes_from_praatfile('/home/dgabutler/CMEECourseWork/Project/Data/praat-files/'+file)
+        start_times = whinny_starttimes_from_praatfile('/home/dgabutler/Work/CMEEProject/Data/praat-files/'+file)
+        end_times = whinny_endtimes_from_praatfile('/home/dgabutler/Work/CMEEProject/Data/praat-files/'+file)
         wav_name = end_times[0]
 
         # Following try-except accounts for praat files missing corresponding
@@ -271,21 +271,21 @@ def clip_noncall_sections(praat_files):
     """
     Clip out all sections, of variable lengths, labelled 'non call'.
     Input is list of all praat files, generated using:
-    praat_files = sorted(os.listdir('/home/dgabutler/CMEECourseWork/Project/Data/praat-files'))
+    praat_files = sorted(os.listdir('/home/dgabutler/Work/CMEEProject/Data/praat-files'))
     """
     for file in praat_files:
     
-        start_times = non_starttimes_from_praatfile('/home/dgabutler/CMEECourseWork/Project/Data/praat-files/'+file)
-        end_times = non_endtimes_from_praatfile('/home/dgabutler/CMEECourseWork/Project/Data/praat-files/'+file)
+        start_times = non_starttimes_from_praatfile('/home/dgabutler/Work/CMEEProject/Data/praat-files/'+file)
+        end_times = non_endtimes_from_praatfile('/home/dgabutler/Work/CMEEProject/Data/praat-files/'+file)
         wav_name = end_times[0]
 
         # Following try-except accounts for praat files missing corresponding
         # audio files
         try:
-            wavfile = AudioSegment.from_wav('/home/dgabutler/CMEECourseWork/Project/Data/unclipped-whinnies/'+wav_name+'.WAV')
+            wavfile = AudioSegment.from_wav('/home/dgabutler/Work/CMEEProject/Data/unclipped-whinnies/'+wav_name+'.WAV')
 
         except IOError:
-            print "error: no wav file named",wav_name,".WAV at path /home/dgabutler/CMEECourseWork/Project/Data/unclipped-whinnies"
+            print "error: no wav file named",wav_name,".WAV at path /home/dgabutler/Work/CMEEProject/Data/unclipped-whinnies"
             continue
 
         for idx, time in enumerate(end_times[1]): 
@@ -296,17 +296,17 @@ def clip_noncall_sections(praat_files):
             clip = wavfile[clip_start:clip_end]
 
             # Save clipped file to separate folder
-            clip.export('/home/dgabutler/CMEECourseWork/Project/Data/sections-without-whinnies/'+wav_name+'_'+str(idx+1)+'.WAV', format="wav")
+            clip.export('/home/dgabutler/Work/CMEEProject/Data/sections-without-whinnies/'+wav_name+'_'+str(idx+1)+'.WAV', format="wav")
 
 def generate_negative_examples(noncall_files, desired_length):
     """
     Creates clips of desired length from all files known to not 
     contain monkey whinnies.
     Input is list of all noncall files, generated using:
-    noncall_files = sorted(os.listdir('/home/dgabutler/CMEECourseWork/Project/Data/sections-without-whinnies'))
+    noncall_files = sorted(os.listdir('/home/dgabutler/Work/CMEEProject/Data/sections-without-whinnies'))
     """
     for idx, file in enumerate(noncall_files):
-        wavfile = AudioSegment.from_wav('/home/dgabutler/CMEECourseWork/Project/Data/sections-without-whinnies/'+file)
+        wavfile = AudioSegment.from_wav('/home/dgabutler/Work/CMEEProject/Data/sections-without-whinnies/'+file)
 
         if wavfile.duration_seconds < desired_length: continue 
 
@@ -315,7 +315,7 @@ def generate_negative_examples(noncall_files, desired_length):
             clip = wavfile[:desired_length*1000] 
 
         # Save clipped file to separate folder
-        clip.export('/home/dgabutler/CMEECourseWork/Project/Data/clipped-negatives/'+file, format="wav")
+        clip.export('/home/dgabutler/Work/CMEEProject/Data/clipped-negatives/'+file, format="wav")
 
 def add_files_to_dataset(folder, dataset, example_type):
     """
@@ -323,7 +323,7 @@ def add_files_to_dataset(folder, dataset, example_type):
     either side) and adds to the dataset name provided.
     Example type = 0 if negative, 1 if positive.
     """
-    data_folder_path = '/home/dgabutler/CMEECourseWork/Project/Data/'
+    data_folder_path = '/home/dgabutler/Work/CMEEProject/Data/'
     files = glob.glob(data_folder_path+folder+'/*.WAV')
     for wav in files:
         y, sr = librosa.load(wav, sr=None, duration=3.00)
@@ -362,16 +362,16 @@ def augment_time_shift(file_name, desired_duration, min_overlap, approx_num_augm
     Example call, try with file name '5A3AE4BC'
 
     """
-    start_times = whinny_starttimes_from_praatfile('/home/dgabutler/CMEECourseWork/Project/Data/praat-files/'+file_name+'.TextGrid')[1]
-    end_times = whinny_endtimes_from_praatfile('/home/dgabutler/CMEECourseWork/Project/Data/praat-files/'+file_name+'.TextGrid')[1]
+    start_times = whinny_starttimes_from_praatfile('/home/dgabutler/Work/CMEEProject/Data/praat-files/'+file_name+'.TextGrid')[1]
+    end_times = whinny_endtimes_from_praatfile('/home/dgabutler/Work/CMEEProject/Data/praat-files/'+file_name+'.TextGrid')[1]
     
     # following try-except accounts for praat files missing corresponding
     # audio files
     try:
-        wav = AudioSegment.from_wav('/home/dgabutler/CMEECourseWork/Project/Data/unclipped-whinnies/'+file_name+'.WAV')
+        wav = AudioSegment.from_wav('/home/dgabutler/Work/CMEEProject/Data/unclipped-whinnies/'+file_name+'.WAV')
 
     except IOError:
-        print 'error: no wav file named',file_name,'.WAV at path /home/dgabutler/CMEECourseWork/Project/Data/unclipped-whinnies/'
+        print 'error: no wav file named',file_name,'.WAV at path /home/dgabutler/Work/CMEEProject/Data/unclipped-whinnies/'
         return
 
     call_durations = [a - b for a, b in zip(end_times,start_times)]
@@ -403,11 +403,23 @@ def augment_time_shift(file_name, desired_duration, min_overlap, approx_num_augm
 
             ### clip wav file at those random points and save
             clip = wav[clip_start:clip_end] 
-            clip.export('/home/dgabutler/CMEECourseWork/Project/Data/aug-timeshifted/'+file_name+'_'+str(idx+1)+'_'+str(i)+'.WAV', format="wav")
+            clip.export('/home/dgabutler/Work/CMEEProject/Data/aug-timeshifted/'+file_name+'_'+str(idx+1)+'_'+str(i)+'.WAV', format="wav")
             
             ### iterative counters in while loop
             i+=1    # tracks num. augmentations per file
             RANDOM = random.uniform(0,1)
+
+def augment_folder_time_shift(min_perc_overlap, avg_augs_per_clip):
+    """
+    Applies time shift augment to all clipped positives.
+    Clips augmented for average specified number of times e.g. 3 will on average produce 3, but sometimes 2, 4, 0 etc., introducing element of randomness.
+
+    Clipped positives from /Data/praat-files 
+    """
+    praat_files = sorted(os.listdir('/home/dgabutler/Work/CMEEProject/Data/praat-files'))
+    file_names = [os.path.splitext(x)[0] for x in praat_files]
+    for file in file_names:
+        augment_time_shift(file, 3000, min_perc_overlap, avg_augs_per_clip)
 
 def augment_file_blend(file_name):
     """
@@ -415,7 +427,7 @@ def augment_file_blend(file_name):
     Blend it with random noise 
     Return resulting wav file 
     """
-    noise_files = glob.glob('/home/dgabutler/CMEECourseWork/Project/Data/non-monkey-noises/*.WAV')
+    noise_files = glob.glob('/home/dgabutler/Work/CMEEProject/Data/non-monkey-noises/*.WAV')
     signal = AudioSegment.from_wav(file_name)
     noise_file = random.choice(noise_files)
     noise = AudioSegment.from_wav(noise_file)
@@ -427,7 +439,7 @@ def augment_file_blend(file_name):
 
     # mix files together
     combined = signal.overlay(noise)
-    combined.export("/home/dgabutler/CMEECourseWork/Project/Data/aug-blended/"+aug_name+'.WAV', format='wav')
+    combined.export("/home/dgabutler/Work/CMEEProject/Data/aug-blended/"+aug_name+'.WAV', format='wav')
 
 ############ FOR KERAS CONVNET # this will be needed if I used files sampled at different rates, currently not needed
 def calc_time_steps(file, duration=None, sr=None):
@@ -555,7 +567,7 @@ def compute_features(audio_samples, sampling_rate, params):
 
 ### TESTING MORE ADVANCED FUNCTIONS
 # import sys 
-# sys.path.insert(0, '/home/dgabutler/CMEECourseWork/Project/Sandbox/batdetect/bat_train')
+# sys.path.insert(0, '/home/dgabutler/Work/CMEEProject/Sandbox/batdetect/bat_train')
 # from data_set_params import DataSetParams
 # from skimage import filters
 # from skimage.util.shape import view_as_windows
@@ -564,5 +576,5 @@ def compute_features(audio_samples, sampling_rate, params):
 
 # params = DataSetParams()
 
-# sampling_rate, audio_samples = wavfile.read('/home/dgabutler/CMEECourseWork/Project/Data/clipped-whinnies/5A383EF0_1.WAV')
+# sampling_rate, audio_samples = wavfile.read('/home/dgabutler/Work/CMEEProject/Data/clipped-whinnies/5A383EF0_1.WAV')
 # features = compute_features(audio_samples, sampling_rate, params=params)
