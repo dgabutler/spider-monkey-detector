@@ -35,6 +35,7 @@ import time # used by: search_folder_
 import pathlib # used by: search_file_
 import csv # used by: search_file_
 import matplotlib.pyplot as plt # used by train_simple_
+from   sklearn.preprocessing import LabelEncoder # added for single output layer
 
 def precision(y_true, y_pred):
     """Precision metric.
@@ -110,7 +111,7 @@ def train_simple_keras(dataset, name, train_perc, num_epochs, batch_size):
     model.add(Dropout(rate=0.23855852860918042)) # from hyperas
 
     model.add(Dense(2))
-    model.add(Activation('softmax'))
+    model.add(Activation('two-node'))
 
     model.compile(
         optimizer="Adam",
@@ -128,35 +129,42 @@ def train_simple_keras(dataset, name, train_perc, num_epochs, batch_size):
         x=X_test,
         y=y_test)
 
-    # list all data in history
-    print(history.history.keys()) # added 
+    # # list all data in history
+    # print(history.history.keys()) # added 
 
-    # summarize history for accuracy
-    plt.plot(history.history['acc'])
-    plt.plot(history.history['val_acc'])
-    plt.title('model '+name+''+'_e'+str(num_epochs)+'_b'+str(batch_size)+' accuracy')
-    plt.ylabel('accuracy')
-    plt.xlabel('epoch')
-    plt.legend(['train', 'test'], loc='upper left')
-    plt.show()
+    # custom function to create plots of training behaviour
+    def training_behaviour_plot(metric):
+        """produces and saves plot of given metric for training
+        and test datasets over duration of training time
 
-    # summarize history for loss
-    plt.plot(history.history['loss'])
-    plt.plot(history.history['val_loss'])
-    plt.title('model '+name+''+'_e'+str(num_epochs)+'_b'+str(batch_size)+' loss')
-    plt.ylabel('loss')
-    plt.xlabel('epoch')
-    plt.legend(['train', 'test'], loc='upper left')
-    plt.show()
+        e.g. training_behaviour_plot('recall')
+        """
+        # check/make savepath 
+        plot_save_path = '../Results/CNN-learning-behaviour-plots/two-node-output/'+'model_'+name+'_e'+str(num_epochs)+'_b'+str(batch_size)
+        if not os.path.exists(plot_save_path):
+            os.makedirs(plot_save_path)
+        # compile and save plot for given metric  
+        plt.plot(history.history[metric])
+        plt.plot(history.history['val_' + metric])
+        plt.title('model '+name+''+'_e'+str(num_epochs)+'_b'+str(batch_size)+' '+metric)
+        plt.ylabel(metric)
+        plt.xlabel('epoch')
+        plt.legend(['train', 'test'], loc='upper left')
+        file_name = plot_save_path+'/'+name+'_e'+str(num_epochs)+'_b'+str(batch_size)+'_'+metric+'.png'
+        # remove plot if already exists, to allow to be overwritten:
+        if os.path.isfile(file_name):
+            os.remove(file_name)
+        plt.savefig(file_name)
+        print('saved '+metric+' plot to '+plot_save_path)
 
-    # summarize history for recall
-    plt.plot(history.history['recall'])
-    plt.plot(history.history['val_recall'])
-    plt.title('model '+name+''+'_e'+str(num_epochs)+'_b'+str(batch_size)+' recall')
-    plt.ylabel('recall')
-    plt.xlabel('epoch')
-    plt.legend(['train', 'test'], loc='upper left')
-    plt.show()
+    training_behaviour_plot('acc')
+    training_behaviour_plot('loss')
+    training_behaviour_plot('recall')
+    training_behaviour_plot('precision')
+
+    print('\nlearning rate:', str(K.eval(model.optimizer.lr)))
+    print('test loss:', score[0])
+    print('test accuracy:', score[1])
 
     print('\nlearning rate:', str(K.eval(model.optimizer.lr)))
 
@@ -165,7 +173,7 @@ def train_simple_keras(dataset, name, train_perc, num_epochs, batch_size):
 
     # serialise model to JSON
     dataset_name = name
-    save_path = '/home/dgabutler/Work/CMEEProject/Models/'+dataset_name+'/'
+    save_path = '/home/dgabutler/Work/CMEEProject/Models/two-node-output/'+dataset_name+'/'
     if not os.path.exists(save_path):
         os.makedirs(save_path)
     model_json = model.to_json()
@@ -175,7 +183,137 @@ def train_simple_keras(dataset, name, train_perc, num_epochs, batch_size):
     model.save_weights(save_path+'e'+str(num_epochs)+'_b'+str(batch_size)+'_model.h5')
     print('\nsaved model '+dataset_name+'/'+'e'+str(num_epochs)+'_b'+str(batch_size)+' to disk')
 
-def load_keras_model(dataset, model_name):
+def train_simple_keras_SINGLE_OUTPUT(dataset, name, train_perc, num_epochs, batch_size):
+    """adapted train-and-save function, with
+    SINGLE SIGMOID OUTPUT LAYER replacing the two nodes
+    - decision taken following advice of Harry Berg, w/
+    guidance from https://stats.stackexchange.com/questions/207049/neural-network-for-binary-classification-use-1-or-2-output-neurons
+    """
+    try:
+        random.shuffle(dataset)
+    except NameError:
+        print('non-existent dataset name provided. check dataset exists and retry')
+        return 
+
+    # use provided training percentage to give num. training samples
+    n_train_samples = int(round(len(dataset)*train_perc))
+    train = dataset[:n_train_samples]
+    # tests on remaining % of total
+    test = dataset[n_train_samples:]    
+
+    X_train, y_train = zip(*train)
+    X_test, y_test = zip(*test)
+
+    # reshape for CNN input
+    X_train = np.array([x.reshape( (128, 282, 1) ) for x in X_train])
+    X_test = np.array([x.reshape( (128, 282, 1) ) for x in X_test])
+
+    # ALTERED ENCODING SECTION #######################################
+    # previously was:
+    # # one-hot encoding for classes
+    # y_train = np.array(keras.utils.to_categorical(y_train, 2))
+    # y_test = np.array(keras.utils.to_categorical(y_test, 2))
+
+    # changed to...
+    encoder = LabelEncoder()
+    encoder.fit(y_train)
+    encoder.fit(y_test)
+    encoded_y_train = encoder.transform(y_train)
+    encoded_y_test = encoder.transform(y_test)
+    ##################################################################
+
+    model = Sequential()
+    input_shape=(128, 282, 1)
+
+    model.add(Conv2D(24, (5, 5), strides=(1, 1), input_shape=input_shape))
+    model.add(MaxPooling2D((4, 2), strides=(4, 2)))
+    model.add(Activation('relu'))
+
+    model.add(Conv2D(48, (5, 5), padding="valid"))
+    model.add(MaxPooling2D((4, 2), strides=(4, 2)))
+    model.add(Activation('relu'))
+
+    model.add(Conv2D(48, (5, 5), padding="valid"))
+    model.add(Activation('relu'))
+
+    model.add(Flatten())
+    model.add(Dropout(rate=0.6152916582980337)) # from hyperas
+
+    model.add(Dense(64))
+    model.add(Activation('relu'))
+    model.add(Dropout(rate=0.23855852860918042)) # from hyperas
+
+    model.add(Dense(1))
+    model.add(Activation('sigmoid'))
+
+    model.compile(
+        optimizer="Adam",
+        loss="binary_crossentropy",
+        metrics=['accuracy', precision, recall]) 
+
+    history = model.fit( # was 'model.fit('
+        x=X_train, 
+        y=encoded_y_train,
+        epochs=num_epochs,
+        batch_size=batch_size,
+        validation_data= (X_test, encoded_y_test))
+
+    score = model.evaluate(
+        x=X_test,
+        y=encoded_y_test)
+
+    # # list all data in history
+    # print(history.history.keys()) # added 
+    print('\n')
+
+        # custom function to create plots of training behaviour
+    def training_behaviour_plot(metric):
+        """produces and saves plot of given metric for training
+        and test datasets over duration of training time
+
+        e.g. training_behaviour_plot('recall')
+        """
+        # check/make savepath 
+        plot_save_path = '../Results/CNN-learning-behaviour-plots/one-node-output/'+'model_'+name+'_e'+str(num_epochs)+'_b'+str(batch_size)
+        if not os.path.exists(plot_save_path):
+            os.makedirs(plot_save_path)
+        # compile and save plot for given metric  
+        file_name = plot_save_path+'/'+name+'_e'+str(num_epochs)+'_b'+str(batch_size)+'_'+metric+'.png'
+        # remove plot if already exists, to allow to be overwritten:
+        if os.path.isfile(file_name):
+            os.remove(file_name)
+        plt.plot(history.history[metric])
+        plt.plot(history.history['val_' + metric])
+        plt.title('model '+name+''+'_e'+str(num_epochs)+'_b'+str(batch_size)+' '+metric)
+        plt.ylabel(metric)
+        plt.xlabel('epoch')
+        plt.legend(['train', 'test'], loc='upper left')
+        plt.savefig(file_name)
+        plt.gcf().clear()
+        print('saved '+metric+' plot to ../Results/CNN-learning-behaviour-plots/')
+
+    training_behaviour_plot('acc')
+    training_behaviour_plot('loss')
+    training_behaviour_plot('recall')
+    training_behaviour_plot('precision')
+
+    print('\nlearning rate:', str(K.eval(model.optimizer.lr)))
+    print('test loss:', score[0])
+    print('test accuracy:', score[1])
+
+    # serialise model to JSON
+    dataset_name = name
+    save_path = '/home/dgabutler/Work/CMEEProject/Models/one-node-output/'+dataset_name+'/'
+    if not os.path.exists(save_path):
+        os.makedirs(save_path)
+    model_json = model.to_json()
+    with open(save_path+'e'+str(num_epochs)+'_b'+str(batch_size)+'_model.json', 'w') as json_file:
+        json_file.write(model_json)
+    # serialise weights to HDF5
+    model.save_weights(save_path+'e'+str(num_epochs)+'_b'+str(batch_size)+'_model.h5')
+    print('\nsaved model '+dataset_name+'/'+'e'+str(num_epochs)+'_b'+str(batch_size)+' to disk')
+
+def load_keras_model(dataset, model_name): # need to add 'two-node'/'one-node'
     """
     Loads pretrained model from disk for a given dataset type.
     """    
@@ -194,6 +332,7 @@ def load_keras_model(dataset, model_name):
 
     return loaded_model 
 
+# NB. all below need adjusting for new one-node approach
 def search_file_for_monkeys(file_name, threshold_confidence, wav_folder, model, tidy=True, full_verbose=True, hnm=False, summary_file=False):
     """
     Splits 60-second file into 3-second clips. Runs each through
@@ -393,47 +532,46 @@ def search_file_list_for_monkeys(file_names_list, wav_folder, threshold_confiden
             continue 
 
 
-
 # ########################## REMOVE THIS SECTION WHEN I'VE STOPPED EXPERIMENTING WITH IT ####################################################
 ####### - added so functions and application of functions in same script, preventing having to import updated functions every time ##########
 
-# import os 
-# import sys
-# import csv 
-# import glob
-# import random
-# import pickle
-# import time
+import os 
+import sys
+import csv 
+import glob
+import random
+import pickle
+import time
 
-# sys.path.insert(0, '/home/dgabutler/Work/CMEEProject/Code')
-# import wavtools   # contains custom functions e.g. denoising
+sys.path.insert(0, '/home/dgabutler/Work/CMEEProject/Code')
+import wavtools   # contains custom functions e.g. denoising
 
-# praat_files = sorted(os.listdir('/home/dgabutler/Work/CMEEProject/Data/praat-files'))
+praat_files = sorted(os.listdir('/home/dgabutler/Work/CMEEProject/Data/praat-files'))
 
-# # # dataset 
-# D_original = [] 
+# # dataset 
+D_original = [] 
 
-# # # - ADD POSITIVES - 
-# # # 1) generate positive clips
-# # wavtools.clip_whinnies(praat_files)
-# # # 2) add clips to dataset
-# wavtools.add_files_to_dataset(folder='clipped-whinnies', dataset=D_original, example_type=1)
-# # # - ADD NEGATIVES - 
-# # # 1) generate negative clips
-# # # a) populate folder with sections of various lengths known to not contain calls
-# # # wavtools.clip_noncall_sections(praat_files)
-# # # b) clip the beginning of each of these into 3 second clips
-# # # noncall_files = sorted(os.listdir('/home/dgabutler/Work/CMEEProject/Data/sections-without-whinnies'))
-# # # wavtools.generate_negative_examples(noncall_files, 3.00)
-# # # 2) add negative clips to dataset
-# wavtools.add_files_to_dataset(folder='clipped-negatives', dataset=D_original, example_type=0)
+# # - ADD POSITIVES - 
+# # 1) generate positive clips
+# wavtools.clip_whinnies(praat_files)
+# # 2) add clips to dataset
+wavtools.add_files_to_dataset(folder='clipped-whinnies', dataset=D_original, example_type=1)
+# # - ADD NEGATIVES - 
+# # 1) generate negative clips
+# # a) populate folder with sections of various lengths known to not contain calls
+# # wavtools.clip_noncall_sections(praat_files)
+# # b) clip the beginning of each of these into 3 second clips
+# # noncall_files = sorted(os.listdir('/home/dgabutler/Work/CMEEProject/Data/sections-without-whinnies'))
+# # wavtools.generate_negative_examples(noncall_files, 3.00)
+# # 2) add negative clips to dataset
+wavtools.add_files_to_dataset(folder='clipped-negatives', dataset=D_original, example_type=0)
 
-# # print("\nNumber of samples currently in original dataset: " + str(wavtools.num_examples(D_original,0)) + \
-# # " negative, " + str(wavtools.num_examples(D_original,1)) + " positive"))
+# print("\nNumber of samples currently in original dataset: " + str(wavtools.num_examples(D_original,0)) + \
+# " negative, " + str(wavtools.num_examples(D_original,1)) + " positive"))
 
-# # # method 2: applying denoising to the spectrograms
+# # method 2: applying denoising to the spectrograms
 
-# D_denoised = wavtools.denoise_dataset(D_original)
+D_denoised = wavtools.denoise_dataset(D_original)
 
 # # # method 3: adding augmented (time-shifted) data
 
@@ -507,8 +645,15 @@ def search_file_list_for_monkeys(file_names_list, wav_folder, threshold_confiden
 # #################################################################
 # ####################### -- TRAINING -- ##########################
 
+dataset = D_denoised
+name = 'D_denoised'
+train_perc = 0.8
+batch_size = 32
+num_epochs = 3
+
 # # (NB. already have model saved, running below will overwrite)
 # train_simple_keras(D_denoised,'D_denoised',0.85, num_epochs=50, batch_size=32)
+train_simple_keras_SINGLE_OUTPUT(dataset,name,train_perc,num_epochs,batch_size)
 
 # # ###########################################################################################################################################
 
