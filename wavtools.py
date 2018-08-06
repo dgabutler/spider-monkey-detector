@@ -248,7 +248,7 @@ def clip_whinnies(praat_files, desired_duration):
         try:
             wavfile = AudioSegment.from_wav(unclipped_folder + '/' + wav_name + '.WAV')
         except IOError:
-            print "error: no wav file named " + wav_name + ".WAV at path " + unclipped_folder
+            print("error: no wav file named " + wav_name + ".WAV at path " + unclipped_folder)
             continue
 
         # desired_duration = 3000 # in milliseconds
@@ -285,7 +285,7 @@ def clip_noncall_sections(praat_files):
             wavfile = AudioSegment.from_wav('/home/dgabutler/Work/CMEEProject/Data/unclipped-whinnies/'+wav_name+'.WAV')
 
         except IOError:
-            print "error: no wav file named",wav_name,".WAV at path /home/dgabutler/Work/CMEEProject/Data/unclipped-whinnies"
+            print("error: no wav file named",wav_name,".WAV at path /home/dgabutler/Work/CMEEProject/Data/unclipped-whinnies")
             continue
 
         for idx, time in enumerate(end_times[1]): 
@@ -371,7 +371,7 @@ def augment_time_shift(file_name, desired_duration, min_overlap, approx_num_augm
         wav = AudioSegment.from_wav('/home/dgabutler/Work/CMEEProject/Data/unclipped-whinnies/'+file_name+'.WAV')
 
     except IOError:
-        print 'error: no wav file named',file_name,'.WAV at path /home/dgabutler/Work/CMEEProject/Data/unclipped-whinnies/'
+        print('error: no wav file named',file_name,'.WAV at path /home/dgabutler/Work/CMEEProject/Data/unclipped-whinnies/')
         return
 
     call_durations = [a - b for a, b in zip(end_times,start_times)]

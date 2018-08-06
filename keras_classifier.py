@@ -1,9 +1,6 @@
-#!/usr/bin/env python
-
 # Basic CNN (using Keras) following tutorial at
 #     https://github.com/ajhalthor/audio-classifier-convNet
 # Machine learning library: keras
-# Date: 13.06.18
 
 # Will be run from code directory in project i.e. 
 # /home/dgabutler/Work/CMEEProject/Code/
@@ -71,7 +68,7 @@ def train_simple_keras(dataset, name, train_perc, num_epochs, batch_size):
     try:
         random.shuffle(dataset)
     except NameError:
-        print 'non-existent dataset name provided. check dataset exists and retry'
+        print('non-existent dataset name provided. check dataset exists and retry')
         return 
 
     # use provided training percentage to give num. training samples
@@ -132,7 +129,7 @@ def train_simple_keras(dataset, name, train_perc, num_epochs, batch_size):
         y=y_test)
 
     # list all data in history
-    print history.history.keys() # added 
+    print(history.history.keys()) # added 
 
     # summarize history for accuracy
     plt.plot(history.history['acc'])
@@ -161,10 +158,10 @@ def train_simple_keras(dataset, name, train_perc, num_epochs, batch_size):
     plt.legend(['train', 'test'], loc='upper left')
     plt.show()
 
-    print '\nlearning rate:', str(K.eval(model.optimizer.lr))
+    print('\nlearning rate:', str(K.eval(model.optimizer.lr)))
 
-    print 'test loss:', score[0]
-    print 'test accuracy:', score[1]
+    print('test loss:', score[0])
+    print('test accuracy:', score[1])
 
     # serialise model to JSON
     dataset_name = name
@@ -176,7 +173,7 @@ def train_simple_keras(dataset, name, train_perc, num_epochs, batch_size):
         json_file.write(model_json)
     # serialise weights to HDF5
     model.save_weights(save_path+'e'+str(num_epochs)+'_b'+str(batch_size)+'_model.h5')
-    print '\nsaved model '+dataset_name+'/'+'e'+str(num_epochs)+'_b'+str(batch_size)+' to disk' 
+    print('\nsaved model '+dataset_name+'/'+'e'+str(num_epochs)+'_b'+str(batch_size)+' to disk')
 
 def load_keras_model(dataset, model_name):
     """
@@ -186,14 +183,14 @@ def load_keras_model(dataset, model_name):
     try:
         json_file = open(folder_path + dataset + '/' + model_name + '_model.json', 'r')
     except IOError:
-        print "\nerror: no model exists for that dataset name. check and try again" 
+        print("\nerror: no model exists for that dataset name. check and try again")
         return 
     loaded_model_json = json_file.read()
     json_file.close()
     loaded_model = model_from_json(loaded_model_json)
     # load weights into model
     loaded_model.load_weights(folder_path + dataset + '/' + model_name + '_model.h5')
-    print "\nloaded model from disk"
+    print("\nloaded model from disk")
 
     return loaded_model 
 
@@ -219,12 +216,12 @@ def search_file_for_monkeys(file_name, threshold_confidence, wav_folder, model, 
     try:
         wavfile = AudioSegment.from_wav(wav)
     except OSError:
-        print "\nerror: audio file",os.path.basename(wav),"at path", os.path.dirname(wav), "cannot be loaded - probably improperly recorded"
+        print("\nerror: audio file",os.path.basename(wav),"at path", os.path.dirname(wav), "cannot be loaded - probably improperly recorded")
         return 
     clip_length_ms = 3000
     clips = make_chunks(wavfile, clip_length_ms)
 
-    print "\n-- processing file " + file_name +'.WAV'
+    print("\n-- processing file " + file_name +'.WAV')
 
     # if hard-negative mining, test for presence of praat file early for efficiency:
     if hnm:
@@ -233,14 +230,14 @@ def search_file_for_monkeys(file_name, threshold_confidence, wav_folder, model, 
             labelled_starts = wavtools.whinny_starttimes_from_praatfile(praat_file_path)[1]
 
         except IOError:
-            print 'error: no praat file named',os.path.basename(praat_file_path),'at path', os.path.dirname(praat_file_path)
+            print('error: no praat file named',os.path.basename(praat_file_path),'at path', os.path.dirname(praat_file_path))
             return
 
     clip_dir = wav_folder+'clips-temp/'
 
     os.makedirs(clip_dir)
     # Export all inviduals clips as wav files
-    # print 'clipping 60 second audio file into 3 second snippets to test...\n'
+    # print('clipping 60 second audio file into 3 second snippets to test...\n')
     for clipping_idx, clip in enumerate(clips):
         clip_name = "clip{0:02}.wav".format(clipping_idx+1)
         clip.export(clip_dir+clip_name, format="wav")
@@ -263,7 +260,7 @@ def search_file_for_monkeys(file_name, threshold_confidence, wav_folder, model, 
 
     # reshape to be correct dimension for CNN input
     # NB. dimensions are: num.samples, num.melbins, num.timeslices, num.featmaps 
-    # print "...checking clips for monkeys..."
+    # print("...checking clips for monkeys...")
     for idx, clip in enumerate(D_test):
         D_test[idx] = clip.reshape(1,128,282,1)
         predicted = model.predict(D_test[idx])
@@ -334,7 +331,7 @@ def search_file_for_monkeys(file_name, threshold_confidence, wav_folder, model, 
                 else: continue     
 
         # if full_verbose:
-        #     print 'clip number', '{0:02}'.format(idx+1), '- best guess -', best_guess
+        #     print('clip number', '{0:02}'.format(idx+1), '- best guess -', best_guess)
 
     # delete all created clips and temporary clip folder
     if tidy:
@@ -345,9 +342,9 @@ def search_file_for_monkeys(file_name, threshold_confidence, wav_folder, model, 
     # print statements to terminal
     if full_verbose:
         if not hnm:
-            print '\nfound', call_count, 'suspected call(s) that surpass %d%% confidence threshold in 60-second file %s.WAV' % (threshold_confidence, file_name)
+            print('\nfound', call_count, 'suspected call(s) that surpass %d%% confidence threshold in 60-second file %s.WAV' % (threshold_confidence, file_name))
         else:
-            print '\nhard negative mining generated', hnm_counter, 'suspected false positive(s) from file', file_name, 'for further training of network'
+            print('\nhard negative mining generated', hnm_counter, 'suspected false positive(s) from file', file_name, 'for further training of network')
 
 def hard_negative_miner(wav_folder, threshold_confidence, model):
 
@@ -371,7 +368,7 @@ def search_folder_for_monkeys(wav_folder, threshold_confidence, model):
     if len(wavs) > 30:
         confirmation = raw_input("\nwarning: this code will take approximately " + str(round(predicted_run_time/60, 3)) + " minutes to run. enter Y to proceed\n\n")
         if confirmation != "Y":
-            print '\nerror: function terminating as permission not received'
+            print('\nerror: function terminating as permission not received')
             return 
     tic = time.time()
 
@@ -379,28 +376,27 @@ def search_folder_for_monkeys(wav_folder, threshold_confidence, model):
         search_file_for_monkeys(wav, threshold_confidence=threshold_confidence, wav_folder=wav_folder, model=model, full_verbose=False, summary_file=True)
 
     toc = time.time()
-    print '\nsystem took', round((toc-tic)/60, 3), 'mins to process', len(wavs), 'files\n\nfor a summary of results, see the csv file created in Results folder\n' 
+    print('\nsystem took', round((toc-tic)/60, 3), 'mins to process', len(wavs), 'files\n\nfor a summary of results, see the csv file created in Results folder\n')
 
 # ## NB.! time per file is approx. 1.553 seconds. 
 # ## resulting in time per folder (~4000 files) of approx. 1.75 hours 
 
-# def search_file_list_for_monkeys(file_names_list, wav_folder, threshold_confidence, model):
-#     """
-#     Search a list of provided file names for positives at given confidence
-#     """
-#     for name in file_names_list:
-#         try:
-#             search_file_for_monkeys(name, wav_folder=wav_folder, threshold_confidence=threshold_confidence, model=model, full_verbose=False)
-#         except IOError:
-#             print 'error: no file named', name
-#             continue 
-
-
-
+def search_file_list_for_monkeys(file_names_list, wav_folder, threshold_confidence, model):
+    """
+    Search a list of provided file names for positives at given confidence
+    """
+    for name in file_names_list:
+        try:
+            search_file_for_monkeys(name, wav_folder=wav_folder, threshold_confidence=threshold_confidence, model=model, full_verbose=False)
+        except IOError:
+            print('error: no file named', name)
+            continue 
 
 
 
 # ########################## REMOVE THIS SECTION WHEN I'VE STOPPED EXPERIMENTING WITH IT ####################################################
+####### - added so functions and application of functions in same script, preventing having to import updated functions every time ##########
+
 # import os 
 # import sys
 # import csv 
@@ -433,7 +429,7 @@ def search_folder_for_monkeys(wav_folder, threshold_confidence, model):
 # wavtools.add_files_to_dataset(folder='clipped-negatives', dataset=D_original, example_type=0)
 
 # # print("\nNumber of samples currently in original dataset: " + str(wavtools.num_examples(D_original,0)) + \
-# # " negative, " + str(wavtools.num_examples(D_original,1)) + " positive")
+# # " negative, " + str(wavtools.num_examples(D_original,1)) + " positive"))
 
 # # # method 2: applying denoising to the spectrograms
 
@@ -446,7 +442,7 @@ def search_folder_for_monkeys(wav_folder, threshold_confidence, model):
 # # wavtools.add_files_to_dataset(folder='aug-timeshifted', dataset=D_aug_t, example_type=1)
 
 # # print("\nNumber of samples when positives augmented (time): " + str(wavtools.num_examples(D_aug_t,0)) + \
-# # " negative, " + str(wavtools.num_examples(D_aug_t,1)) + " positive")
+# # " negative, " + str(wavtools.num_examples(D_aug_t,1)) + " positive"))
 
 # # # # method 3.5: adding augmented (blended) data
 
@@ -455,7 +451,7 @@ def search_folder_for_monkeys(wav_folder, threshold_confidence, model):
 # # # wavtools.add_files_to_dataset(folder='aug-blended', dataset=D_aug_tb, example_type=1)
 
 # # # print("\nNumber of samples when positives augmented (time shift and blended): " + str(wavtools.num_examples(D_aug_tb,0)) + \
-# # # " negative, " + str(wavtools.num_examples(D_aug_tb,1)) + " positive")
+# # # " negative, " + str(wavtools.num_examples(D_aug_tb,1)) + " positive"))
 
 # # # method 4: augmented (both) and denoised
 
@@ -469,7 +465,7 @@ def search_folder_for_monkeys(wav_folder, threshold_confidence, model):
 # # # wavtools.add_files_to_dataset(folder='mined-false-positives', dataset=D_mined_aug_tb, example_type=0)
 
 # # # print("\nNumber of samples when hard negatives added: " + str(wavtools.num_examples(D_mined_aug_tb,0)) + \
-# # # " negative, " + str(wavtools.num_examples(D_mined_aug_tb,1)) + " positive")
+# # # " negative, " + str(wavtools.num_examples(D_mined_aug_tb,1)) + " positive"))
 
 # # # D_mined_aug_tb_denoised = wavtools.denoise_dataset(D_mined_aug_tb)
 
@@ -480,7 +476,7 @@ def search_folder_for_monkeys(wav_folder, threshold_confidence, model):
 # # wavtools.add_files_to_dataset(folder='selected-false-positives', dataset=D_S_mined_aug_t_denoised, example_type=0)
 
 # # print("\nNumber of samples when select negatives added: " + str(wavtools.num_examples(D_S_mined_aug_t_denoised,0)) + \
-# # " negative, " + str(wavtools.num_examples(D_S_mined_aug_t_denoised,1)) + " positive")
+# # " negative, " + str(wavtools.num_examples(D_S_mined_aug_t_denoised,1)) + " positive"))
 
 # # # method 7: adding 'most wrong' false positives as training examples
 
@@ -505,7 +501,7 @@ def search_folder_for_monkeys(wav_folder, threshold_confidence, model):
 # D_MW_mined_aug_t_denoised = wavtools.denoise_dataset(D_MW_mined_aug_t)
 
 # print("\nNumber of samples when select negatives added: " + str(wavtools.num_examples(D_MW_mined_aug_t,0)) + \
-# " negative, " + str(wavtools.num_examples(D_MW_mined_aug_t,1)) + " positive")
+# " negative, " + str(wavtools.num_examples(D_MW_mined_aug_t,1)) + " positive"))
 
 
 # #################################################################
@@ -569,7 +565,7 @@ def search_folder_for_monkeys(wav_folder, threshold_confidence, model):
 #     try:
 #         random.shuffle(dataset)
 #     except NameError:
-#         print 'non-existent dataset name provided. check dataset exists and retry'
+#         print('non-existent dataset name provided. check dataset exists and retry')
 #         return 
 
     # # use provided training percentage to give num. training samples
@@ -731,4 +727,4 @@ def search_folder_for_monkeys(wav_folder, threshold_confidence, model):
     #     json_file.write(model_json)
     # # serialise weights to HDF5
     # model.save_weights(save_path+'e'+str(num_epochs)+'_b'+str(batch_size)+'_model.h5')
-    # print '\nsaved model '+dataset_name+'/'+'e'+str(num_epochs)+'_b'+str(batch_size)+' to disk' 
+    # print('\nsaved model '+dataset_name+'/'+'e'+str(num_epochs)+'_b'+str(batch_size)+' to disk')
