@@ -36,6 +36,21 @@ import pathlib # used by: search_file_
 import csv # used by: search_file_
 import matplotlib.pyplot as plt # used by train_simple_
 from   sklearn.preprocessing import LabelEncoder # added for single output layer
+from   sklearn.preprocessing import scale
+from   sklearn.metrics import roc_curve # used in train_simple_
+from   sklearn.metrics import auc
+
+# possibly move to wavtools.py
+def standardise_inputs(dataset):
+    """uses standardisation method from 
+    https://stackoverflow.com/questions/1735025/how-to-normalize-a-numpy-array-to-within-a-certain-range
+    , applies to all spects in dataset
+    """
+    for row in dataset:
+        row = list(row)
+        # row[0] /= np.max(np.abs(row[0]),axis=0)
+        row[0] /= np.max(np.abs(row[0]),axis=None)
+    return dataset
 
 def precision(y_true, y_pred):
     """Precision metric.
@@ -183,7 +198,7 @@ def train_simple_keras(dataset, name, train_perc, num_epochs, batch_size):
     model.save_weights(save_path+'e'+str(num_epochs)+'_b'+str(batch_size)+'_model.h5')
     print('\nsaved model '+dataset_name+'/'+'e'+str(num_epochs)+'_b'+str(batch_size)+' to disk')
 
-def train_simple_keras_SINGLE_OUTPUT(dataset, name, train_perc, num_epochs, batch_size):
+def train_simple_keras_ONE_NODE_OUTPUT(dataset, name, train_perc, num_epochs, batch_size):
     """adapted train-and-save function, with
     SINGLE SIGMOID OUTPUT LAYER replacing the two nodes
     - decision taken following advice of Harry Berg, w/
@@ -266,7 +281,7 @@ def train_simple_keras_SINGLE_OUTPUT(dataset, name, train_perc, num_epochs, batc
     # print(history.history.keys()) # added 
     print('\n')
 
-        # custom function to create plots of training behaviour
+    # custom function to create plots of training behaviour
     def training_behaviour_plot(metric):
         """produces and saves plot of given metric for training
         and test datasets over duration of training time
@@ -297,9 +312,35 @@ def train_simple_keras_SINGLE_OUTPUT(dataset, name, train_perc, num_epochs, batc
     training_behaviour_plot('recall')
     training_behaviour_plot('precision')
 
+    def auc_roc_plot(X_test, y_test):
+        # generate ROC
+        y_pred = model.predict(X_test).ravel()
+        fpr, tpr, thresholds = roc_curve(y_test, y_pred)
+        # generate AUC
+        auc_val = auc(fpr, tpr)
+        # plot ROC
+        plot_save_path = '../Results/CNN-learning-behaviour-plots/one-node-output/'+'model_'+name+'_e'+str(num_epochs)+'_b'+str(batch_size)
+        file_name = plot_save_path+'/'+name+'_e'+str(num_epochs)+'_b'+str(batch_size)+'_ROC.png'
+        plt.figure(1)
+        plt.plot([0, 1], [0, 1], 'k--')
+        plt.plot(fpr, tpr, label='area under curve = {:.3f})'.format(auc_val))
+        plt.xlabel('False positive rate')
+        plt.ylabel('True positive rate')
+        plt.title('ROC curve - '+name+'_e'+str(num_epochs)+'_b'+str(batch_size))
+        plt.legend(loc='lower right')
+        plt.savefig(file_name)
+        plt.gcf().clear()
+        print('saved ROC plot to ../Results/CNN-learning-behaviour-plots/')
+
+        return auc_val
+
+    # return auc roc value and save roc plot to results folder
+    auc_val = auc_roc_plot(X_test, y_test)
+
     print('\nlearning rate:', str(K.eval(model.optimizer.lr)))
     print('test loss:', score[0])
     print('test accuracy:', score[1])
+    print('auc:', auc_val)
 
     # serialise model to JSON
     dataset_name = name
@@ -313,15 +354,16 @@ def train_simple_keras_SINGLE_OUTPUT(dataset, name, train_perc, num_epochs, batc
     model.save_weights(save_path+'e'+str(num_epochs)+'_b'+str(batch_size)+'_model.h5')
     print('\nsaved model '+dataset_name+'/'+'e'+str(num_epochs)+'_b'+str(batch_size)+' to disk')
 
-def load_keras_model(dataset, model_name): # need to add 'two-node'/'one-node'
+def load_keras_model(dataset, model_name):
     """
     Loads pretrained model from disk for a given dataset type.
     """    
-    folder_path = '/home/dgabutler/Work/CMEEProject/Models/'
+    folder_path = '/home/dgabutler/Work/CMEEProject/Models/one-node-output/'
+    model_path = folder_path + dataset + '/' + model_name + '_model.json'
     try:
-        json_file = open(folder_path + dataset + '/' + model_name + '_model.json', 'r')
+        json_file = open(model_path, 'r')
     except IOError:
-        print("\nerror: no model exists for that dataset name. check and try again")
+        print('\nerror: no model exists for that dataset name at the provided path: '+model_path+'\n\ncheck and try again')
         return 
     loaded_model_json = json_file.read()
     json_file.close()
@@ -332,8 +374,7 @@ def load_keras_model(dataset, model_name): # need to add 'two-node'/'one-node'
 
     return loaded_model 
 
-# NB. all below need adjusting for new one-node approach
-def search_file_for_monkeys(file_name, threshold_confidence, wav_folder, model, tidy=True, full_verbose=True, hnm=False, summary_file=False):
+def search_file_for_monkeys_TWO_NODE_OUTPUT(file_name, threshold_confidence, wav_folder, model, denoise=True, standardise=True, tidy=True, full_verbose=True, hnm=False, summary_file=False):
     """
     Splits 60-second file into 3-second clips. Runs each through
     detector. If activation surpasses confidence threshold, clip
@@ -345,17 +386,29 @@ def search_file_for_monkeys(file_name, threshold_confidence, wav_folder, model, 
     These clips are then able to be fed in as negative examples, to
     improve the discriminatory capability of the network 
 
-    Example call: search_file_for_monkeys('5A3AD7A6', 60, '/home/dgabutler/Work/CMEEProject/Data/unclipped-whinnies/shady-lane/')
+    Options include denoising and standardising of input audio files.
+
+    This function is the old version of search_file_for_monkeys, when 
+    CNN terminated in two nodes in output layer.
+    Updated version, with only a sigmoid-activated single node, is 
+    the function that search_folder_ & search_file_list use as default.
+
+    Example call: 
+    search_file_for_monkeys_TWO_NODE_OUTPUT('5A3BE710', 60, '/home/dgabutler/Work/CMEEProject/Data/unclipped-whinnies/shady-lane/', loaded_model)
     """
-    audio_folder = wav_folder
+
     # isolate folder name from path:
     p = pathlib.Path(wav_folder)
     isolated_folder_name = p.parts[2:][-1]
-    wav = audio_folder+file_name+'.WAV'
+    wav = wav_folder+file_name+'.WAV'
+    # checks: does audio file exist and can it be read
+    if not os.path.isfile(wav):
+        print("\nerror: no audio file named",os.path.basename(wav),"at path", os.path.dirname(wav))
+        return 
     try:
         wavfile = AudioSegment.from_wav(wav)
     except OSError:
-        print("\nerror: audio file",os.path.basename(wav),"at path", os.path.dirname(wav), "cannot be loaded - probably improperly recorded")
+        print("\nerror: audio file",os.path.basename(wav),"at path",os.path.dirname(wav),"exists but cannot be loaded (probably improperly recorded)")
         return 
     clip_length_ms = 3000
     clips = make_chunks(wavfile, clip_length_ms)
@@ -374,8 +427,13 @@ def search_file_for_monkeys(file_name, threshold_confidence, wav_folder, model, 
 
     clip_dir = wav_folder+'clips-temp/'
 
-    os.makedirs(clip_dir)
-    # Export all inviduals clips as wav files
+    # delete temporary clips directory if interuption to previous
+    # function call failed to remove it 
+    if os.path.exists(clip_dir) and os.path.isdir(clip_dir):
+        rmtree(clip_dir)
+    # create temporary clips directory 
+    os.makedirs(clip_dir) 
+    # export all inviduals clips as wav files
     # print('clipping 60 second audio file into 3 second snippets to test...\n')
     for clipping_idx, clip in enumerate(clips):
         clip_name = "clip{0:02}.wav".format(clipping_idx+1)
@@ -384,16 +442,23 @@ def search_file_for_monkeys(file_name, threshold_confidence, wav_folder, model, 
     D_test = [] 
 
     clipped_wavs = glob.glob(clip_dir+'clip*')
-    clipped_wavs.sort(key=lambda f: int(filter(str.isdigit, f)))
+    clipped_wavs = sorted(clipped_wavs, key=lambda item: (int(item.partition(' ')[0])
+                                if item[0].isdigit() else float('inf'), item))
 
+    # add each 3-second clip to dataframe for testing
     for clip in clipped_wavs:
         y, sr = librosa.load(clip, sr=None, duration=3.00)
         ps = librosa.feature.melspectrogram(y=y, sr=sr)
         if ps.shape != (128, 282): continue
         D_test.append(ps)
 
-    D_test = wavtools.denoise_dataset(D_test)
+    # conditions for modifying file:
+    if denoise == True:
+        D_test = wavtools.denoise_dataset(D_test)
+    if standardise == True:
+        D_test = standardise_inputs(D_test)
 
+    # counters for naming of files
     call_count = 0
     hnm_counter = 0
 
@@ -447,7 +512,7 @@ def search_file_for_monkeys(file_name, threshold_confidence, wav_folder, model, 
                     # make summary file if it doesn't already exist
                     summary_file_path = pathlib.Path(summary_file_name)
                     if not summary_file_path.is_file():
-                        with open(summary_file_name, 'wb') as csvfile:
+                        with open(summary_file_name, 'w') as csvfile:
                             filewriter = csv.writer(csvfile, delimiter=',')
                             filewriter.writerow(column_headings)
                             filewriter.writerow(csv_row)
@@ -467,6 +532,174 @@ def search_file_for_monkeys(file_name, threshold_confidence, wav_folder, model, 
                     # (therefore a false positive has been detected)
                     hnm_counter+=1
                     copyfile(clipped_wavs[idx], '/home/dgabutler/Work/CMEEProject/Data/mined-false-positives/'+file_name+'_'+str(hnm_counter)+'_'+approx_position+'_'+str(int(round(predicted[0][1]*100)))+'.WAV')
+                else: continue     
+
+        # if full_verbose:
+        #     print('clip number', '{0:02}'.format(idx+1), '- best guess -', best_guess)
+
+    # delete all created clips and temporary clip folder
+    if tidy:
+        rmtree(clip_dir)
+        # empty recycling bin to prevent build-up of trashed clips
+        subprocess.call(['rm -rf /home/dgabutler/.local/share/Trash/*'], shell=True)
+
+    # print statements to terminal
+    if full_verbose:
+        if not hnm:
+            print('\nfound', call_count, 'suspected call(s) that surpass %d%% confidence threshold in 60-second file %s.WAV' % (threshold_confidence, file_name))
+        else:
+            print('\nhard negative mining generated', hnm_counter, 'suspected false positive(s) from file', file_name, 'for further training of network')
+
+def search_file_for_monkeys_ONE_NODE_OUTPUT(file_name, threshold_confidence, wav_folder, model, denoise=True, standardise=True, tidy=True, full_verbose=True, hnm=False, summary_file=False):
+    """
+    Splits 60-second file into 3-second clips. Runs each through
+    detector. If activation surpasses confidence threshold, clip
+    is separated.
+    If hard-negative mining functionality selected, function
+    takes combination of labelled praat file and 60-second wave file,
+    runs detector on 3-second clips, and seperates any clips that 
+    the detector incorrectly identifies as being positives.
+    These clips are then able to be fed in as negative examples, to
+    improve the discriminatory capability of the network 
+
+    Example call: 
+    search_file_for_monkeys_ONE_NODE_OUTPUT('5A3BE710', 60, '/home/dgabutler/Work/CMEEProject/Data/unclipped-whinnies/shady-lane/', loaded_model)
+    """
+
+    # isolate folder name from path:
+    p = pathlib.Path(wav_folder)
+    isolated_folder_name = p.parts[2:][-1]
+    wav = wav_folder+file_name+'.WAV'
+    # checks: does audio file exist and can it be read
+    if not os.path.isfile(wav):
+        print("\nerror: no audio file named",os.path.basename(wav),"at path", os.path.dirname(wav))
+        return 
+    try:
+        wavfile = AudioSegment.from_wav(wav)
+    except OSError:
+        print("\nerror: audio file",os.path.basename(wav),"at path",os.path.dirname(wav),"exists but cannot be loaded (probably improperly recorded)")
+        return 
+    clip_length_ms = 3000
+    clips = make_chunks(wavfile, clip_length_ms)
+
+    print("\n-- processing file " + file_name +'.WAV')
+
+    # if hard-negative mining, test for presence of praat file early for efficiency:
+    if hnm:
+        praat_file_path = '/home/dgabutler/Work/CMEEProject/Data/praat-files/'+file_name+'.TextGrid'
+        try:
+            labelled_starts = wavtools.whinny_starttimes_from_praatfile(praat_file_path)[1]
+
+        except IOError:
+            print('error: no praat file named',os.path.basename(praat_file_path),'at path', os.path.dirname(praat_file_path))
+            return
+
+    clip_dir = wav_folder+'clips-temp/'
+
+    # delete temporary clips directory if interuption to previous
+    # function call failed to remove it 
+    if os.path.exists(clip_dir) and os.path.isdir(clip_dir):
+        rmtree(clip_dir)
+    # create temporary clips directory 
+    os.makedirs(clip_dir) 
+    # export all inviduals clips as wav files
+    # print('clipping 60 second audio file into 3 second snippets to test...\n')
+    for clipping_idx, clip in enumerate(clips):
+        clip_name = "clip{0:02}.wav".format(clipping_idx+1)
+        clip.export(clip_dir+clip_name, format="wav")
+
+    D_test = [] 
+
+    clipped_wavs = glob.glob(clip_dir+'clip*')
+    clipped_wavs = sorted(clipped_wavs, key=lambda item: (int(item.partition(' ')[0])
+                                if item[0].isdigit() else float('inf'), item))
+
+    for clip in clipped_wavs:
+        y, sr = librosa.load(clip, sr=None, duration=3.00)
+        ps = librosa.feature.melspectrogram(y=y, sr=sr)
+        if ps.shape != (128, 282): continue
+        D_test.append(ps)
+
+    # conditions for modifying file:
+    if denoise == True:
+        D_test = wavtools.denoise_dataset(D_test)
+    if standardise == True:
+        D_test = standardise_inputs(D_test)
+
+    # counters for informative naming of files
+    call_count = 0
+    hnm_counter = 0
+
+    # reshape to be correct dimension for CNN input
+    # NB. dimensions are: num.samples, num.melbins, num.timeslices, num.featmaps 
+    # print("...checking clips for monkeys...")
+    for idx, clip in enumerate(D_test):
+        D_test[idx] = clip.reshape(1,128,282,1)
+        predicted = model.predict(D_test[idx])
+
+        # if NEGATIVE:
+        if predicted[0][0] <= (threshold_confidence/100.0): ########## THIS IS SECTION THAT CHANGED BETWEEN 1 node/2 node:
+            continue                                        # WAS: if predicted[0][1] <= (threshold_confidence/100.0)
+                                                            # furthermore 3 changes (predicted[0][1] -> ..cted[0][0]) below            
+        else:
+        # if POSITIVE
+            call_count+=1
+            lower_clip_bound = (3*(idx+1))-3
+            upper_clip_bound = 3*(idx+1)
+            # i.e. clip 3 would be 6-9 seconds into original 60-sec file
+            approx_position = str(lower_clip_bound)+'-'+str(upper_clip_bound)
+
+            # regular detector behaviour - not hard negative mining
+            if not hnm:
+                # suspected positives moved to folder in Results, files renamed 'filename_numcallinfile_confidence.WAV'
+                # results_dir = '/media/dgabutler/My Passport/Audio/detected-positives/'+isolated_folder_name+'-results'
+                results_dir = '/home/dgabutler/Work/CMEEProject/Results/detected-positives/'+isolated_folder_name+'-results'
+
+                if not os.path.exists(results_dir):
+                    os.makedirs(results_dir)
+                copyfile(clipped_wavs[idx], results_dir+'/'+file_name+'_'+str(call_count)+'_'+approx_position+'_'+str(int(round(predicted[0][0]*100)))+'.WAV')
+
+                # making summary file 
+                if summary_file:
+                    summary_file_name = '/home/dgabutler/Work/CMEEProject/Results/'+isolated_folder_name+'-results-summary.csv'
+                    # obtain datetime from file name if possible 
+                    try:
+                        datetime_of_recording = wavtools.filename_to_localdatetime(file_name)
+                        date_of_recording = datetime_of_recording.strftime("%d/%m/%Y")
+                        time_of_recording = datetime_of_recording.strftime("%X")
+                    # if not possible due to unusual file name, 
+                    # assign 'na' value to date time 
+                    except ValueError:
+                        date_of_recording = 'NA'
+                        time_of_recording = 'NA' 
+                    
+                    # values to be entered in row of summary file:
+                    column_headings = ['file name', 'approx. position in recording (secs)', 'time of recording', 'date of recording', 'confidence']
+                    csv_row = [file_name, approx_position, time_of_recording, date_of_recording, str(int(round(predicted[0][0]*100)))+'%']
+                        
+                    # make summary file if it doesn't already exist
+                    summary_file_path = pathlib.Path(summary_file_name)
+                    if not summary_file_path.is_file():
+                        with open(summary_file_name, 'w') as csvfile:
+                            filewriter = csv.writer(csvfile, delimiter=',')
+                            filewriter.writerow(column_headings)
+                            filewriter.writerow(csv_row)
+                    
+                    # if summary file exists, *append* row to it
+                    else:
+                        with open(summary_file_name, 'a') as csvfile:
+                            filewriter = csv.writer(csvfile, delimiter=',')
+                            filewriter.writerow(csv_row)
+            else:
+            # if hard-negative mining for false positives to enhance training:
+                labelled_ends = wavtools.whinny_endtimes_from_praatfile(praat_file_path)[1]
+
+                if not any(lower_clip_bound <= starts/1000.0 <= upper_clip_bound for starts in labelled_starts) \
+                and not any(lower_clip_bound <= ends/1000.0 <= upper_clip_bound for ends in labelled_ends):                   
+                    # i.e. if section has not been labelled as containing a call
+                    # (therefore a false positive has been detected)
+                    hnm_counter+=1
+                    copyfile(clipped_wavs[idx], '/home/dgabutler/Work/CMEEProject/Data/mined-false-positives/'+file_name+'_'+str(hnm_counter)+'_'+approx_position+'_'+str(int(round(predicted[0][0]*100)))+'.WAV')
                 else: continue     
 
         # if full_verbose:
@@ -505,14 +738,14 @@ def search_folder_for_monkeys(wav_folder, threshold_confidence, model):
     # require user input if code is suspected to take long to run
     predicted_run_time = len(wavs)*1.553
     if len(wavs) > 30:
-        confirmation = raw_input("\nwarning: this code will take approximately " + str(round(predicted_run_time/60, 3)) + " minutes to run. enter Y to proceed\n\n")
+        confirmation = input("\nwarning: this code will take approximately " + str(round(predicted_run_time/60, 3)) + " minutes to run. enter Y to proceed\n\n")
         if confirmation != "Y":
             print('\nerror: function terminating as permission not received')
             return 
     tic = time.time()
 
     for wav in wavs:
-        search_file_for_monkeys(wav, threshold_confidence=threshold_confidence, wav_folder=wav_folder, model=model, full_verbose=False, summary_file=True)
+        search_file_for_monkeys_ONE_NODE_OUTPUT(wav, threshold_confidence=threshold_confidence, wav_folder=wav_folder, model=model, full_verbose=False, summary_file=True)
 
     toc = time.time()
     print('\nsystem took', round((toc-tic)/60, 3), 'mins to process', len(wavs), 'files\n\nfor a summary of results, see the csv file created in Results folder\n')
@@ -526,7 +759,7 @@ def search_file_list_for_monkeys(file_names_list, wav_folder, threshold_confiden
     """
     for name in file_names_list:
         try:
-            search_file_for_monkeys(name, wav_folder=wav_folder, threshold_confidence=threshold_confidence, model=model, full_verbose=False)
+            search_file_for_monkeys_ONE_NODE_OUTPUT(name, wav_folder=wav_folder, threshold_confidence=threshold_confidence, model=model, full_verbose=False)
         except IOError:
             print('error: no file named', name)
             continue 
@@ -569,9 +802,19 @@ wavtools.add_files_to_dataset(folder='clipped-negatives', dataset=D_original, ex
 # print("\nNumber of samples currently in original dataset: " + str(wavtools.num_examples(D_original,0)) + \
 # " negative, " + str(wavtools.num_examples(D_original,1)) + " positive"))
 
+
 # # method 2: applying denoising to the spectrograms
 
 D_denoised = wavtools.denoise_dataset(D_original)
+
+# # method 2.5: normalizing input spectrograms
+
+D_denoised_standardised = standardise_inputs(D_denoised)
+
+print("\nNumber of samples currently in denoised/standard. dataset: " + \
+str(wavtools.num_examples(D_denoised_standardised,0)) + " negative, " + \
+str(wavtools.num_examples(D_denoised_standardised,1)) + " positive")
+
 
 # # # method 3: adding augmented (time-shifted) data
 
@@ -645,15 +888,15 @@ D_denoised = wavtools.denoise_dataset(D_original)
 # #################################################################
 # ####################### -- TRAINING -- ##########################
 
-dataset = D_denoised
-name = 'D_denoised'
+dataset = D_denoised_standardised
+name = 'D_denoised_standardised'
 train_perc = 0.8
 batch_size = 32
-num_epochs = 3
+num_epochs = 2
 
-# # (NB. already have model saved, running below will overwrite)
-# train_simple_keras(D_denoised,'D_denoised',0.85, num_epochs=50, batch_size=32)
-train_simple_keras_SINGLE_OUTPUT(dataset,name,train_perc,num_epochs,batch_size)
+# # # (NB. already have model saved, running below will overwrite)
+# # train_simple_keras(D_denoised,'D_denoised',0.85, num_epochs=50, batch_size=32)
+train_simple_keras_ONE_NODE_OUTPUT(dataset,name,train_perc,num_epochs,batch_size)
 
 # # ###########################################################################################################################################
 
@@ -661,9 +904,10 @@ train_simple_keras_SINGLE_OUTPUT(dataset,name,train_perc,num_epochs,batch_size)
 # # ##################### -- PREDICTING -- ##########################
 
 # ###### LOADING TRAINED MODEL
-# loaded_model = load_keras_model('D_denoised', 'e50_b32')
+loaded_model = load_keras_model('D_denoised_standardised', 'e50_b32')
 
-# search_folder_for_monkeys('/home/dgabutler/Work/CMEEProject/Data/dummy/', 70, model=loaded_model)
+# search_file_for_monkeys_ONE_NODE_OUTPUT('00000C6D', 60, '/home/dgabutler/Work/CMEEProject/Data/unclipped-whinnies/shady-lane/',loaded_model)
+search_folder_for_monkeys('/home/dgabutler/Work/CMEEProject/Data/unclipped-whinnies/', 70, model=loaded_model)
 
 
 
