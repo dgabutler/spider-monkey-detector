@@ -78,14 +78,17 @@ def whinny_starttimes_from_praatfile(praat_file):
     with open(praat_file, "rt") as f:
         praat_contents = f.readlines()
     
-    line_with_wavname = praat_contents[10]
-    result = re.search('"(.*)"', line_with_wavname)
-    wav_name = result.group(1)
+    # - WAVNAME NOW FOUND USING NAME OF PRAAT FILE, NOT BY READING PRAAT FILE
+    # line_with_wavname = praat_contents[10]
+    # result = re.search('"(.*)"', line_with_wavname)
+    # wav_name = result.group(1)
+
+    wav_name = os.path.basename(os.path.splitext(praat_file)[0])
 
     for idx, line in enumerate(praat_contents): 
         if "_Whinny" in line and "intervals" in praat_contents[idx+1]:
             time_line = praat_contents[idx-2]
-            start_times.extend(re.findall("\d+\.\d+", time_line))
+            start_times.extend(re.findall("(?<=xmin\s=\s)(\d+\.?\d*)(?=\s)", time_line))
 
     start_times = map(float, start_times) # converts time to number, not 
                                           # character string
@@ -104,9 +107,12 @@ def whinny_endtimes_from_praatfile(praat_file):
     with open(praat_file, "rt") as f:
         praat_contents = f.readlines()
     
-    line_with_wavname = praat_contents[10]
-    result = re.search('"(.*)"', line_with_wavname)
-    wav_name = result.group(1)
+    # - WAVNAME NOW FOUND USING NAME OF PRAAT FILE, NOT BY READING PRAAT FILE
+    # line_with_wavname = praat_contents[10]
+    # result = re.search('"(.*)"', line_with_wavname)
+    # wav_name = result.group(1)
+
+    wav_name = os.path.basename(os.path.splitext(praat_file)[0])
 
     for idx, line in enumerate(praat_contents): 
         if "_Whinny" in line and "intervals" in praat_contents[idx+1]:
@@ -243,7 +249,7 @@ def clip_whinnies(praat_files, desired_duration):
         end_times = whinny_endtimes_from_praatfile('/home/dgabutler/Work/CMEEProject/Data/praat-files/'+file)
         wav_name = end_times[0]
 
-        # Following try-except accounts for praat files missing corresponding
+        # following try-except accounts for praat files missing corresponding
         # audio files
         try:
             wavfile = AudioSegment.from_wav(unclipped_folder + '/' + wav_name + '.WAV')
@@ -254,8 +260,8 @@ def clip_whinnies(praat_files, desired_duration):
         # desired_duration = 3000 # in milliseconds
 
         for idx, time in enumerate(end_times[1]): 
-            if (60000 - time >= desired_duration):
-                clip_start = start_times[1][idx] - 200 # start 0.3 sec in
+            if (len(wavfile) - time >= desired_duration):
+                clip_start = start_times[1][idx] # add - 200 to start 0.2 sec in
                 clip_end = clip_start + desired_duration
                 clip = wavfile[clip_start:clip_end]
             else:          
@@ -307,33 +313,37 @@ def generate_negative_examples(noncall_files, desired_length):
     """
     for idx, file in enumerate(noncall_files):
         wavfile = AudioSegment.from_wav('/home/dgabutler/Work/CMEEProject/Data/sections-without-whinnies/'+file)
-
         if wavfile.duration_seconds < desired_length: continue 
-
-        else:
-            
+        else:            
             clip = wavfile[:desired_length*1000] 
-
         # Save clipped file to separate folder
         clip.export('/home/dgabutler/Work/CMEEProject/Data/clipped-negatives/'+file, format="wav")
 
-def add_files_to_dataset(folder, dataset, example_type):
+def add_files_to_dataset(folder, dataset, example_type, sr):
     """
     Takes all wav files from given folder name (minus slashes on 
     either side) and adds to the dataset name provided.
     Example type = 0 if negative, 1 if positive.
+    sr (sampling rate) must be 44100 or 48000. 
     """
     data_folder_path = '/home/dgabutler/Work/CMEEProject/Data/'
     files = glob.glob(data_folder_path+folder+'/*.WAV')
+    # dataset preallocated for speed 
+    # dataset = np.zeros(shape=(len(files),2), dtype=object)
     for wav in files:
-        y, sr = librosa.load(wav, sr=None, duration=3.00)
+        y, sr = librosa.load(wav, sr=sr, duration=3.00)
         ps = librosa.feature.melspectrogram(y=y, sr=sr)
-        if ps.shape != (128, 282): continue
-        dataset.append( (ps, example_type) )
+        if sr == 48000:
+            if ps.shape != (128, 282): continue
+        elif sr == 44100:
+            if ps.shape != (128, 259): continue
+        else:
+            return("error: sampling rate must be 48000 or 44100") 
+        dataset.append((ps, example_type))
 
 def denoise_dataset(dataset):
     """
-    Applies denoise function over all spectrograms in dataset
+    Applies denoise function over all spectrograms in dataset.
     Different functionality dependent on labelled/unlabelled data
     """
     if type(dataset[0]) == tuple:
@@ -341,11 +351,9 @@ def denoise_dataset(dataset):
             spect_tuple_as_list = list(spectrogram)
             spect_tuple_as_list[0] = denoise(spect_tuple_as_list[0])
             spectrogram = tuple(spect_tuple_as_list)
-
     else: 
         for spectrogram in dataset:
             spectrogram = denoise(spectrogram)
-
     return dataset 
 
 ###### AUGMENTATION FUNCTIONS
@@ -441,7 +449,7 @@ def augment_file_blend(file_name):
     combined = signal.overlay(noise)
     combined.export("/home/dgabutler/Work/CMEEProject/Data/aug-blended/"+aug_name+'.WAV', format='wav')
 
-############ FOR KERAS CONVNET # this will be needed if I used files sampled at different rates, currently not needed
+############ following function unused 
 def calc_time_steps(file, duration=None, sr=None):
     """
     For a given duration and sampling rate, gives number of time steps a file will be broken into

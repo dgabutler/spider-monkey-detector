@@ -198,7 +198,7 @@ def train_simple_keras(dataset, name, train_perc, num_epochs, batch_size):
     model.save_weights(save_path+'e'+str(num_epochs)+'_b'+str(batch_size)+'_model.h5')
     print('\nsaved model '+dataset_name+'/'+'e'+str(num_epochs)+'_b'+str(batch_size)+' to disk')
 
-def train_simple_keras_ONE_NODE_OUTPUT(dataset, name, train_perc, num_epochs, batch_size):
+def train_simple_keras_ONE_NODE_OUTPUT(dataset, name, train_perc, num_epochs, batch_size, sr):
     """adapted train-and-save function, with
     SINGLE SIGMOID OUTPUT LAYER replacing the two nodes
     - decision taken following advice of Harry Berg, w/
@@ -210,6 +210,16 @@ def train_simple_keras_ONE_NODE_OUTPUT(dataset, name, train_perc, num_epochs, ba
         print('non-existent dataset name provided. check dataset exists and retry')
         return 
 
+    # increased sampling rate gives increased number of time-slices per clip
+    # this affects CNN input size, and time_dimension used as proxy to ensure 
+    # all clips tested are of the same length (if not, they are not added to test dataframe)
+    if sr == 44100:
+        time_dimension = 259
+    elif sr == 48000:
+        time_dimension = 282
+    else:
+        return("error: sampling rate must be 48000 or 44100") 
+
     # use provided training percentage to give num. training samples
     n_train_samples = int(round(len(dataset)*train_perc))
     train = dataset[:n_train_samples]
@@ -220,8 +230,8 @@ def train_simple_keras_ONE_NODE_OUTPUT(dataset, name, train_perc, num_epochs, ba
     X_test, y_test = zip(*test)
 
     # reshape for CNN input
-    X_train = np.array([x.reshape( (128, 282, 1) ) for x in X_train])
-    X_test = np.array([x.reshape( (128, 282, 1) ) for x in X_test])
+    X_train = np.array([x.reshape((128, time_dimension, 1)) for x in X_train])
+    X_test = np.array([x.reshape((128, time_dimension, 1)) for x in X_test])
 
     # ALTERED ENCODING SECTION #######################################
     # previously was:
@@ -238,7 +248,7 @@ def train_simple_keras_ONE_NODE_OUTPUT(dataset, name, train_perc, num_epochs, ba
     ##################################################################
 
     model = Sequential()
-    input_shape=(128, 282, 1)
+    input_shape=(128, time_dimension, 1)
 
     model.add(Conv2D(24, (5, 5), strides=(1, 1), input_shape=input_shape))
     model.add(MaxPooling2D((4, 2), strides=(4, 2)))
@@ -392,6 +402,10 @@ def search_file_for_monkeys_TWO_NODE_OUTPUT(file_name, threshold_confidence, wav
     CNN terminated in two nodes in output layer.
     Updated version, with only a sigmoid-activated single node, is 
     the function that search_folder_ & search_file_list use as default.
+
+    This version is no longer being updated with latest additions, e.g.:
+
+    - does not have sampling rate argument
 
     Example call: 
     search_file_for_monkeys_TWO_NODE_OUTPUT('5A3BE710', 60, '/home/dgabutler/Work/CMEEProject/Data/unclipped-whinnies/shady-lane/', loaded_model)
@@ -550,7 +564,7 @@ def search_file_for_monkeys_TWO_NODE_OUTPUT(file_name, threshold_confidence, wav
         else:
             print('\nhard negative mining generated', hnm_counter, 'suspected false positive(s) from file', file_name, 'for further training of network')
 
-def search_file_for_monkeys_ONE_NODE_OUTPUT(file_name, threshold_confidence, wav_folder, model, denoise=True, standardise=True, tidy=True, full_verbose=True, hnm=False, summary_file=False):
+def search_file_for_monkeys_ONE_NODE_OUTPUT(file_name, threshold_confidence, wav_folder, model, sr, denoise=True, standardise=True, tidy=True, full_verbose=True, hnm=False, summary_file=False):
     """
     Splits 60-second file into 3-second clips. Runs each through
     detector. If activation surpasses confidence threshold, clip
@@ -563,8 +577,25 @@ def search_file_for_monkeys_ONE_NODE_OUTPUT(file_name, threshold_confidence, wav
     improve the discriminatory capability of the network 
 
     Example call: 
-    search_file_for_monkeys_ONE_NODE_OUTPUT('5A3BE710', 60, '/home/dgabutler/Work/CMEEProject/Data/unclipped-whinnies/shady-lane/', loaded_model)
+    search_file_for_monkeys_ONE_NODE_OUTPUT('5A3BE710', 60, '/home/dgabutler/Work/CMEEProject/Data/unclipped-whinnies/', loaded_model)
+
+    NB. use following for testing, but REMEMBER TO DELETE***********
+    file_name = '5A3BE710'
+    threshold_confidence = 70
+    wav_folder = '/home/dgabutler/Work/CMEEProject/Data/unclipped-whinnies/'
+    model = loaded_model
+
     """
+
+    # increased sampling rate gives increased number of time-slices per clip
+    # this affects CNN input size, and time_dimension used as proxy to ensure 
+    # all clips tested are of the same length (if not, they are not added to test dataframe)
+    if sr == 44100:
+        time_dimension = 259
+    elif sr == 48000:
+        time_dimension = 282
+    else:
+        return("error: sampling rate must be 48000 or 44100") 
 
     # isolate folder name from path:
     p = pathlib.Path(wav_folder)
@@ -608,17 +639,18 @@ def search_file_for_monkeys_ONE_NODE_OUTPUT(file_name, threshold_confidence, wav
         clip_name = "clip{0:02}.wav".format(clipping_idx+1)
         clip.export(clip_dir+clip_name, format="wav")
 
-    D_test = [] 
-
     clipped_wavs = glob.glob(clip_dir+'clip*')
     clipped_wavs = sorted(clipped_wavs, key=lambda item: (int(item.partition(' ')[0])
                                 if item[0].isdigit() else float('inf'), item))
 
-    for clip in clipped_wavs:
-        y, sr = librosa.load(clip, sr=None, duration=3.00)
+    # preallocate dataframe of correct length
+    D_test = np.zeros(len(clipped_wavs), dtype=object)
+
+    for data_idx, clip in enumerate(clipped_wavs):
+        y, sr = librosa.load(clip, sr=sr, duration=3.00)
         ps = librosa.feature.melspectrogram(y=y, sr=sr)
-        if ps.shape != (128, 282): continue
-        D_test.append(ps)
+        if ps.shape != (128, time_dimension): continue
+        D_test[data_idx] = ps
 
     # conditions for modifying file:
     if denoise == True:
@@ -634,7 +666,7 @@ def search_file_for_monkeys_ONE_NODE_OUTPUT(file_name, threshold_confidence, wav
     # NB. dimensions are: num.samples, num.melbins, num.timeslices, num.featmaps 
     # print("...checking clips for monkeys...")
     for idx, clip in enumerate(D_test):
-        D_test[idx] = clip.reshape(1,128,282,1)
+        D_test[idx] = clip.reshape(1,128,time_dimension,1)
         predicted = model.predict(D_test[idx])
 
         # if NEGATIVE:
@@ -726,9 +758,9 @@ def hard_negative_miner(wav_folder, threshold_confidence, model):
     wavs = [os.path.basename(x) for x in wavs]
 
     for wav in wavs:
-        search_file_for_monkeys(wav, threshold_confidence=threshold_confidence, wav_folder=wav_folder, model=model, hnm=True)
+        search_file_for_monkeys_ONE_NODE_OUTPUT(wav, threshold_confidence=threshold_confidence, wav_folder=wav_folder, sr=sr, model=model, hnm=True)
 
-def search_folder_for_monkeys(wav_folder, threshold_confidence, model):
+def search_folder_for_monkeys(wav_folder, threshold_confidence, model, sr):
     
     # list all file names in folder
     wavs = glob.glob(wav_folder+'*.WAV')
@@ -745,7 +777,7 @@ def search_folder_for_monkeys(wav_folder, threshold_confidence, model):
     tic = time.time()
 
     for wav in wavs:
-        search_file_for_monkeys_ONE_NODE_OUTPUT(wav, threshold_confidence=threshold_confidence, wav_folder=wav_folder, model=model, full_verbose=False, summary_file=True)
+        search_file_for_monkeys_ONE_NODE_OUTPUT(wav, threshold_confidence, wav_folder, model, sr, full_verbose=False, summary_file=True)
 
     toc = time.time()
     print('\nsystem took', round((toc-tic)/60, 3), 'mins to process', len(wavs), 'files\n\nfor a summary of results, see the csv file created in Results folder\n')
@@ -786,9 +818,9 @@ D_original = []
 
 # # - ADD POSITIVES - 
 # # 1) generate positive clips
-# wavtools.clip_whinnies(praat_files)
+# wavtools.clip_whinnies(praat_files, desired_duration=3000)
 # # 2) add clips to dataset
-wavtools.add_files_to_dataset(folder='clipped-whinnies', dataset=D_original, example_type=1)
+wavtools.add_files_to_dataset(folder='clipped-whinnies', dataset=D_original, example_type=1, sr=44100)
 # # - ADD NEGATIVES - 
 # # 1) generate negative clips
 # # a) populate folder with sections of various lengths known to not contain calls
@@ -797,7 +829,7 @@ wavtools.add_files_to_dataset(folder='clipped-whinnies', dataset=D_original, exa
 # # noncall_files = sorted(os.listdir('/home/dgabutler/Work/CMEEProject/Data/sections-without-whinnies'))
 # # wavtools.generate_negative_examples(noncall_files, 3.00)
 # # 2) add negative clips to dataset
-wavtools.add_files_to_dataset(folder='clipped-negatives', dataset=D_original, example_type=0)
+wavtools.add_files_to_dataset(folder='clipped-negatives', dataset=D_original, example_type=0, sr=44100)
 
 # print("\nNumber of samples currently in original dataset: " + str(wavtools.num_examples(D_original,0)) + \
 # " negative, " + str(wavtools.num_examples(D_original,1)) + " positive"))
@@ -893,10 +925,11 @@ name = 'D_denoised_standardised'
 train_perc = 0.8
 batch_size = 32
 num_epochs = 2
+sr = 44100
 
 # # # (NB. already have model saved, running below will overwrite)
 # # train_simple_keras(D_denoised,'D_denoised',0.85, num_epochs=50, batch_size=32)
-train_simple_keras_ONE_NODE_OUTPUT(dataset,name,train_perc,num_epochs,batch_size)
+train_simple_keras_ONE_NODE_OUTPUT(dataset,name,train_perc,num_epochs,batch_size,sr)
 
 # # ###########################################################################################################################################
 
@@ -907,7 +940,7 @@ train_simple_keras_ONE_NODE_OUTPUT(dataset,name,train_perc,num_epochs,batch_size
 loaded_model = load_keras_model('D_denoised_standardised', 'e50_b32')
 
 # search_file_for_monkeys_ONE_NODE_OUTPUT('00000C6D', 60, '/home/dgabutler/Work/CMEEProject/Data/unclipped-whinnies/shady-lane/',loaded_model)
-search_folder_for_monkeys('/home/dgabutler/Work/CMEEProject/Data/unclipped-whinnies/', 70, model=loaded_model)
+search_folder_for_monkeys('/home/dgabutler/Work/CMEEProject/Data/unclipped-whinnies/', 70, model=loaded_model, sr=48000)
 
 
 
