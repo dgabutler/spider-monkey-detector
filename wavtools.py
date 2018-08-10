@@ -370,14 +370,12 @@ def standardise_inputs(dataset):
 
 ###### AUGMENTATION FUNCTIONS
 
-def augment_time_shift(file_name, desired_duration, min_overlap, approx_num_augmentations):
+def augment_time_shift(file_name, desired_duration, min_overlap, num_augmentations_per_clip):
     """
     For a given file name (without extension), creates clips in which
     monkey call is present for at least a minimum of 'min_overlap'
     percentage. I.e. '0.05' would ensure that at least 5% of call
     is present, either at the beginning or the end.
-    Number of augmented clips created also has randomness, being 
-    approximately the number provided but not guaranteed.
 
     Example call, try with file name '5A3AE4BC'
 
@@ -396,15 +394,10 @@ def augment_time_shift(file_name, desired_duration, min_overlap, approx_num_augm
 
     call_durations = [a - b for a, b in zip(end_times,start_times)]
 
-    while_threshold = 1-1.0/(approx_num_augmentations)
-
     for idx, start_time in enumerate(start_times):
 
-        RANDOM = -1
-        i = 1
-
-        while RANDOM < while_threshold:
-        # i.e. should get around specified number of augs, but it varies
+        i = 0
+        while i < num_augmentations_per_clip:
 
             ### randomly define clip start and end times
             start_range_lower_limit = start_time - desired_duration + (min_overlap*call_durations[idx])
@@ -423,11 +416,10 @@ def augment_time_shift(file_name, desired_duration, min_overlap, approx_num_augm
 
             ### clip wav file at those random points and save
             clip = wav[clip_start:clip_end] 
-            clip.export('/home/dgabutler/Work/CMEEProject/Data/aug-timeshifted/'+file_name+'_'+str(idx+1)+'_'+str(i)+'.WAV', format="wav")
+            clip.export('/home/dgabutler/Work/CMEEProject/Data/aug-timeshifted/'+file_name+'_'+str(idx+1)+'_'+str(i+1)+'.WAV', format="wav")
             
-            ### iterative counters in while loop
-            i+=1    # tracks num. augmentations per file
-            RANDOM = random.uniform(0,1)
+            ### iterative counter in while loop
+            i+=1    
 
 def augment_folder_time_shift(min_perc_overlap, avg_augs_per_clip):
     """
