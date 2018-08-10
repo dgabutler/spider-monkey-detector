@@ -149,7 +149,7 @@ def kfoldcrossval(run_type, sr):
         # create and compile model
         model = compile_model()
         # fit model
-        train_history = model.fit(X[train], Y[train], epochs=10, batch_size=32, validation_data=(X[test],Y[test]), verbose=0)
+        train_history = model.fit(X[train], Y[train], epochs=50, batch_size=32, validation_data=(X[test],Y[test]), verbose=0)
         # evaluate model
         def metric_max(metric):
             """returns best (highest/lowest) metric score from training run 
@@ -165,9 +165,9 @@ def kfoldcrossval(run_type, sr):
         loss_list.append(train_history.history['val_loss'][-1])
         # print("%s: %.2f%%" % (model.metrics_names[1], scores[1]*100))
     
-    print("\naccuracy: %.2f%% (+/- %.2f%%)" % (np.mean([item[0] for item in acc_list])*100, np.std([item[0] for item in acc_list])*100))
-    print("loss: %.2f (+/- %.2f)" % (np.mean(loss_list), np.std(loss_list)))
-    print("precision: %.2f%% (+/- %.2f%%)" % (np.mean([item[0] for item in precision_list])*100, np.std([item[0] for item in precision_list])*100))
-    print("recall: %.2f%% (+/- %.2f%%)" % (np.mean([item[0] for item in recall_list])*100, np.std([item[0] for item in recall_list])*100))
+    print("\nAccuracy: %.2f%% (+/- %.2f%%)" % (np.mean([item[0] for item in acc_list])*100, np.std([item[0] for item in acc_list])*100))
+    print("Loss: %.2f (+/- %.2f)" % (np.mean(loss_list), np.std(loss_list)))
+    print("Precision: %.2f%% (+/- %.2f%%)" % (np.mean([item[0] for item in precision_list])*100, np.std([item[0] for item in precision_list])*100))
+    print("Recall: %.2f%% (+/- %.2f%%)" % (np.mean([item[0] for item in recall_list])*100, np.std([item[0] for item in recall_list])*100))
 
 kfoldcrossval('denoised/standardised', sr=44100)
