@@ -40,6 +40,45 @@ from   sklearn.preprocessing import scale
 from   sklearn.metrics import roc_curve # used in train_simple_
 from   sklearn.metrics import auc
 
+def custom_recall(y_true, y_pred, threshold):
+    """Recall metric, with threshold option
+    """
+    y_true = np.ndarray.tolist(y_true)
+    y_pred = np.ndarray.tolist(y_pred)
+    # flatten list of lists to list
+    y_pred = [item for sublist in y_pred for item in sublist]
+    # round predictions to 0 or 1
+    for idx, val in enumerate(y_pred):
+        y_pred[idx] = 0 if val < threshold else 1 
+    # true positives equals num. that sum to 2 ('1' and '1')
+    summed = [x+y for x, y in zip(y_true, y_pred)]
+    true_positives = sum(i == 2 for i in summed)
+    # loop to find false positives
+    possible_positives = sum(i == 1 for i in y_true)
+    recall = true_positives/(true_positives+possible_positives)
+    return recall 
+
+def custom_precision(y_true, y_pred, threshold):
+    """Precision metric, with threshold option
+    """
+    y_true = np.ndarray.tolist(y_true)
+    y_pred = np.ndarray.tolist(y_pred)
+    # flatten list of lists to list
+    y_pred = [item for sublist in y_pred for item in sublist]
+    # round predictions to 0 or 1
+    for idx, val in enumerate(y_pred):
+        y_pred[idx] = 0 if val < threshold else 1 
+    # true positives equals num. that sum to 2 ('1' and '1')
+    summed = [x+y for x, y in zip(y_true, y_pred)]
+    true_positives = sum(i == 2 for i in summed)
+    # loop to find false positives
+    false_positives = 0
+    for i in range(len(y_pred)):
+        if y_pred[i] == 1 and y_true[i] == 0:
+            false_positives += 1 
+    precision = true_positives/(true_positives+false_positives)
+    return precision 
+
 def precision(y_true, y_pred):
     """Precision metric.
 
