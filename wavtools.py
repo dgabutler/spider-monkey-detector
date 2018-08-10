@@ -356,6 +356,18 @@ def denoise_dataset(dataset):
             spectrogram = denoise(spectrogram)
     return dataset 
 
+def standardise_inputs(dataset):
+    """uses standardisation method from 
+    https://stackoverflow.com/questions/1735025/how-to-normalize-a-numpy-array-to-within-a-certain-range
+    , applies to all spects in dataset
+    """
+    for row in dataset:
+        row = list(row)
+        # row[0] /= np.max(np.abs(row[0]),axis=0)
+        row[0] /= np.max(np.abs(row[0]),axis=None)
+    return dataset
+
+
 ###### AUGMENTATION FUNCTIONS
 
 def augment_time_shift(file_name, desired_duration, min_overlap, approx_num_augmentations):

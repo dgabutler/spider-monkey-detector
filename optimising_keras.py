@@ -1,4 +1,3 @@
-from   __future__ import print_function
 import glob 
 import librosa
 import random 
@@ -11,7 +10,6 @@ from   keras.models import Sequential
 from   hyperopt import Trials, STATUS_OK, tpe
 from   hyperas import optim
 from   hyperas.distributions import choice, uniform
-
 
 def data():
     """

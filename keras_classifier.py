@@ -40,18 +40,6 @@ from   sklearn.preprocessing import scale
 from   sklearn.metrics import roc_curve # used in train_simple_
 from   sklearn.metrics import auc
 
-# possibly move to wavtools.py
-def standardise_inputs(dataset):
-    """uses standardisation method from 
-    https://stackoverflow.com/questions/1735025/how-to-normalize-a-numpy-array-to-within-a-certain-range
-    , applies to all spects in dataset
-    """
-    for row in dataset:
-        row = list(row)
-        # row[0] /= np.max(np.abs(row[0]),axis=0)
-        row[0] /= np.max(np.abs(row[0]),axis=None)
-    return dataset
-
 def precision(y_true, y_pred):
     """Precision metric.
 
@@ -470,7 +458,7 @@ def search_file_for_monkeys_TWO_NODE_OUTPUT(file_name, threshold_confidence, wav
     if denoise == True:
         D_test = wavtools.denoise_dataset(D_test)
     if standardise == True:
-        D_test = standardise_inputs(D_test)
+        D_test = wavtools.standardise_inputs(D_test)
 
     # counters for naming of files
     call_count = 0
@@ -656,7 +644,7 @@ def search_file_for_monkeys_ONE_NODE_OUTPUT(file_name, threshold_confidence, wav
     if denoise == True:
         D_test = wavtools.denoise_dataset(D_test)
     if standardise == True:
-        D_test = standardise_inputs(D_test)
+        D_test = wavtools.standardise_inputs(D_test)
 
     # counters for informative naming of files
     call_count = 0
@@ -841,7 +829,7 @@ D_denoised = wavtools.denoise_dataset(D_original)
 
 # # method 2.5: normalizing input spectrograms
 
-D_denoised_standardised = standardise_inputs(D_denoised)
+D_denoised_standardised = wavtools.standardise_inputs(D_denoised)
 
 print("\nNumber of samples currently in denoised/standard. dataset: " + \
 str(wavtools.num_examples(D_denoised_standardised,0)) + " negative, " + \
