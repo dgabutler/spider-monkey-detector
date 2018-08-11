@@ -18,11 +18,15 @@ import  numpy as np
 import  random # used by: aug_time_shift, aug_file_blend              
 import  glob # used by: aug_file_blend       
 import  librosa
-import  librosa.display              
+import  librosa.display   
+from    sklearn.utils import shuffle
+import  python_speech_features as psf # used by load_mag_spec
 
 
 #######################
 ### WRANGLING FUNCTIONS
+
+# useful:
 
 def filename_to_localdatetime(filename):
     """
@@ -114,58 +118,6 @@ def whinny_endtimes_from_praatfile(praat_file):
 
     for idx, line in enumerate(praat_contents): 
         if "_Whinny" in line and "intervals" in praat_contents[idx+1]:
-            time_line = praat_contents[idx-1]
-            end_times.extend(re.findall("\d+\.\d+", time_line))
-    
-    end_times = map(float, end_times) # converts time to number, not 
-                                      # character string
-    
-    # Comment line below if time in seconds is wanted:
-    end_times = [times * 1000 for times in end_times]
-    
-    return wav_name, end_times
-
-def other_starttimes_from_praatfile(praat_file):
-    """
-    Extracts 'other' start times (in milliseconds) from praat text file
-    Output is tuple containing .wav file name and then all times (in ms)
-    """
-    start_times = []    # empty list to store any hits
-    with open(praat_file, "rt") as f:
-        praat_contents = f.readlines()
-    
-    line_with_wavname = praat_contents[10]
-    result = re.search('"(.*)"', line_with_wavname)
-    wav_name = result.group(1)
-
-    for idx, line in enumerate(praat_contents): 
-        if "_Other" in line and "intervals" in praat_contents[idx+1]:
-            time_line = praat_contents[idx-2]
-            start_times.extend(re.findall("\d+\.\d+", time_line))
-
-    start_times = map(float, start_times) # converts time to number, not 
-                                          # character string
-    
-    # Comment line below if time in seconds is wanted:
-    start_times = [times * 1000 for times in start_times]
-
-    return wav_name, start_times
-
-def other_endtimes_from_praatfile(praat_file):
-    """
-    Extracts 'other' end times (in milliseconds) from praat text file
-    Output is tuple containing .wav file name and then all times in ms
-    """
-    end_times = []    # empty list to store any hits
-    with open(praat_file, "rt") as f:
-        praat_contents = f.readlines()
-    
-    line_with_wavname = praat_contents[10]
-    result = re.search('"(.*)"', line_with_wavname)
-    wav_name = result.group(1)
-
-    for idx, line in enumerate(praat_contents): 
-        if "_Other" in line and "intervals" in praat_contents[idx+1]:
             time_line = praat_contents[idx-1]
             end_times.extend(re.findall("\d+\.\d+", time_line))
     
@@ -317,6 +269,34 @@ def generate_negative_examples(noncall_files, desired_length):
         # Save clipped file to separate folder
         clip.export('/home/dgabutler/Work/CMEEProject/Data/clipped-negatives/'+file, format="wav")
 
+def load_mag_spec(path, sr, winlen=0.025, winstep=0.01, NFFT=2048, denoise=True, normalize=True):
+    """
+    From https://stackoverflow.com/questions/42330830/how-should-audio-be-pre-processed-for-classification
+    """
+    #open wav file
+    (sig,rate) = librosa.load(path, sr=sr, duration=3.00)
+
+    #get frames
+    winfunc=lambda x:np.ones((x,))
+    frames = psf.sigproc.framesig(sig, winlen*rate, winstep*rate, winfunc)
+
+    #magnitude Spectrogram
+    magspec = np.rot90(psf.sigproc.magspec(frames, NFFT))
+
+    #noise reduction (mean substract)
+    if denoise:
+        magspec -= magspec.mean(axis=0)
+
+    #normalize values between 0 and 1
+    if normalize:
+        magspec -= magspec.min(axis=0)
+        magspec /= magspec.max(axis=0)
+
+    #show spec dimensions
+    print(magspec.shape)    
+
+    return magspec
+
 def add_files_to_dataset(folder, dataset, example_type, sr):
     """
     Takes all wav files from given folder name (minus slashes on 
@@ -326,8 +306,6 @@ def add_files_to_dataset(folder, dataset, example_type, sr):
     """
     data_folder_path = '/home/dgabutler/Work/CMEEProject/Data/'
     files = glob.glob(data_folder_path+folder+'/*.WAV')
-    # dataset preallocated for speed 
-    # dataset = np.zeros(shape=(len(files),2), dtype=object)
     for wav in files:
         y, sr = librosa.load(wav, sr=sr, duration=3.00)
         ps = librosa.feature.melspectrogram(y=y, sr=sr)
@@ -338,6 +316,38 @@ def add_files_to_dataset(folder, dataset, example_type, sr):
         else:
             return("error: sampling rate must be 48000 or 44100") 
         dataset.append((ps, example_type))
+
+def custom_add_files_to_dataset(folder, dataset, example_type, sr, augment=True):
+    """
+    Takes all wav files from given folder name (minus slashes on 
+    either side) and adds to the dataset name provided.
+    Example type = 0 if negative, 1 if positive.
+    sr (sampling rate) must be 44100 or 48000. 
+    """
+    data_folder_path = '/home/dgabutler/Work/CMEEProject/Data/'
+    files = glob.glob(data_folder_path+folder+'/*.WAV')
+    for wav in files:
+        mag_spec = load_mag_spec(wav, sr)
+        if augment:
+            mel_spec = do_augmentation(mag_spec, sr, noise=True, noise_samples=True, roll=True)
+        else: 
+            mel_spec = librosa.feature.melspectrogram(S=mag_spec, sr=sr)
+        if mel_spec.shape != (128, 299): continue
+
+        dataset.append((mel_spec, example_type))
+
+def denoise(spec_noisy):
+    """
+    Subtract mean from each frequency band
+    Modified from Mac Aodha et al. 2017
+    """
+    me = np.mean(spec_noisy, 1)
+    spec_denoise = spec_noisy - me[:, np.newaxis]
+
+    # remove anything below 0
+    spec_denoise.clip(min=0, out=spec_denoise)
+
+    return spec_denoise
 
 def denoise_dataset(dataset):
     """
@@ -365,8 +375,64 @@ def standardise_inputs(dataset):
         row[0] /= np.max(np.abs(row[0]),axis=None)
     return dataset
 
+# not useful
+
+def other_starttimes_from_praatfile(praat_file):
+    """
+    Extracts 'other' start times (in milliseconds) from praat text file
+    Output is tuple containing .wav file name and then all times (in ms)
+    """
+    start_times = []    # empty list to store any hits
+    with open(praat_file, "rt") as f:
+        praat_contents = f.readlines()
+    
+    line_with_wavname = praat_contents[10]
+    result = re.search('"(.*)"', line_with_wavname)
+    wav_name = result.group(1)
+
+    for idx, line in enumerate(praat_contents): 
+        if "_Other" in line and "intervals" in praat_contents[idx+1]:
+            time_line = praat_contents[idx-2]
+            start_times.extend(re.findall("\d+\.\d+", time_line))
+
+    start_times = map(float, start_times) # converts time to number, not 
+                                          # character string
+    
+    # Comment line below if time in seconds is wanted:
+    start_times = [times * 1000 for times in start_times]
+
+    return wav_name, start_times
+
+def other_endtimes_from_praatfile(praat_file):
+    """
+    Extracts 'other' end times (in milliseconds) from praat text file
+    Output is tuple containing .wav file name and then all times in ms
+    """
+    end_times = []    # empty list to store any hits
+    with open(praat_file, "rt") as f:
+        praat_contents = f.readlines()
+    
+    line_with_wavname = praat_contents[10]
+    result = re.search('"(.*)"', line_with_wavname)
+    wav_name = result.group(1)
+
+    for idx, line in enumerate(praat_contents): 
+        if "_Other" in line and "intervals" in praat_contents[idx+1]:
+            time_line = praat_contents[idx-1]
+            end_times.extend(re.findall("\d+\.\d+", time_line))
+    
+    end_times = map(float, end_times) # converts time to number, not 
+                                      # character string
+    
+    # Comment line below if time in seconds is wanted:
+    end_times = [times * 1000 for times in end_times]
+    
+    return wav_name, end_times
+
 
 ###### AUGMENTATION FUNCTIONS
+
+# useful:
 
 def augment_time_shift(file_name, desired_duration, min_overlap, num_augmentations_per_clip):
     """
@@ -431,6 +497,51 @@ def augment_folder_time_shift(min_overlap, num_augmentations_per_clip):
     for file in file_names:
         augment_time_shift(file, 3000, min_overlap, num_augmentations_per_clip)
 
+def do_augmentation(mag_spec, sr, noise=True, noise_samples=True, roll=True):
+    """
+    Fundamentally similar to augmentation function in git repo
+    of Kahl et al. 2017
+    For a given file, will augment magnitude spectrogram using one 
+    of any combination of the following methods:
+    - vertical pitch roll 
+    - add an amount of salt-and-pepper Gaussian noise
+    - blend with a file containing a non-spider-monkey-noise
+    e.g. howler calling, cockerel crowing, any number of diff.
+    birds, 
+    and return mel-frequency spectrogram 
+    """
+    AUG = {#'type':[probability, value]
+        'roll':[0.5, (0.0, 0.05)], 
+        'noise':[0.1, 0.01],
+        'noise_samples':[0.1, 1.0],
+        }
+
+    RANDOM = np.random.RandomState(100)
+
+    # wrap shift (roll up/down) NB. left/right commented out
+    if 'roll' and RANDOM.choice([True, False], p=[AUG['roll'][0], 1 - AUG['roll'][0]]):
+        mag_spec = np.roll(mag_spec, int(mag_spec.shape[0] * (RANDOM.uniform(-AUG['roll'][1][1], AUG['roll'][1][1]))), axis=0)
+        # img = np.roll(img, int(img.shape[1] * (RANDOM.uniform(-AUG['roll'][1][0], AUG['roll'][1][0]))), axis=1)
+
+    # gaussian noise
+    if 'noise' and RANDOM.choice([True, False], p=[AUG['noise'][0], 1 - AUG['noise'][0]]):
+        mag_spec = mag_spec + RANDOM.normal(0.0, RANDOM.uniform(0, AUG['noise'][1]**0.5), mag_spec.shape)
+        mag_spec = np.clip(mag_spec, 0.0, 1.0)
+
+    # load noise samples
+    NOISE = shuffle(glob.glob('../Data/non-monkey-noises/*.WAV'))
+
+    # add noise samples
+    if 'noise_samples' and RANDOM.choice([True, False], p=[AUG['noise_samples'][0], 1 - AUG['noise_samples'][0]]):
+        mag_spec = mag_spec + load_mag_spec(NOISE[RANDOM.choice(range(0, len(NOISE)))],sr=sr) * AUG['noise_samples'][1]
+        mag_spec -= mag_spec.min(axis=None)
+        mag_spec /= mag_spec.max(axis=None)
+    
+    aug_mel_spec = librosa.feature.melspectrogram(S=mag_spec, sr=sr)
+    return aug_mel_spec 
+
+# potentially not useful:
+
 def augment_file_blend(file_name):
     """
     Take file from aug time shift folder. use no overlap tho, i.e. just have file move in time 
@@ -476,143 +587,3 @@ def augment_gaussian_noise(spectrogram):
         spectrogram += RANDOM.normal(0.0, RANDOM.uniform(0, 0.1), spectrogram.shape)
         spectrogram = np.clip(spectrogram, 0.0, 1.0)
         return spectrogram
-    
-
-
-############ following function unused 
-def calc_time_steps(file, duration=None, sr=None):
-    """
-    For a given duration and sampling rate, gives number of time steps a file will be broken into
-    Solves problem of varying ConvNet input dimension dependent on sampling rate/duration
-    """
-    y, sr = librosa.load(file, sr=sr, duration=duration)
-    ps = librosa.feature.melspectrogram(y=y, sr=sr)
-
-    return ps.shape[1]
-
-#######################################################################################
-################ MORE ADVANCED FUNCTIONS FROM MAC AODHA ET AL. 2017
-################ - denoises spectrograms, generates features in sliding window over .wav file
-################ - NB. ONLY DENOISE IS USED BY CODE SO FAR. THE REST IS YET TO BE IMPLIMENTED
-
-def denoise(spec_noisy):
-    """
-    Subtract mean from each frequency band
-    Modified from Mac Aodha et al. 2017
-    """
-    me = np.mean(spec_noisy, 1)
-    spec_denoise = spec_noisy - me[:, np.newaxis]
-
-    # remove anything below 0
-    spec_denoise.clip(min=0, out=spec_denoise)
-
-    return spec_denoise
-
-def process_spectrogram(spec, denoise_spec=True, smooth_spec=True):
-    """
-    Denoises, and smooths spectrogram.
-    NB removed mean-log magnitude section, don't think I need it
-    as I don't have silence on either side of my recordings
-    """
-
-    # denoise
-    if denoise_spec:
-        spec = denoise(spec)
-
-    # smooth the spectrogram
-    if smooth_spec:
-        spec = filters.gaussian(spec, 1.0)
-
-    return spec
-
-def gen_mag_spectrogram(x, fs, ms, overlap_perc):
-    """
-    Computes magnitude spectrogram by specifying time.
-    """
-
-    nfft = int(ms*fs)
-    noverlap = int(overlap_perc*nfft)
-
-    # window data
-    step = nfft - noverlap
-    shape = (nfft, (x.shape[-1]-noverlap)//step)
-    strides = (x.strides[0], step*x.strides[0])
-    x_wins = np.lib.stride_tricks.as_strided(x, shape=shape, strides=strides)
-
-    # apply window
-    x_wins_han = np.hanning(x_wins.shape[0])[..., np.newaxis] * x_wins
-
-    # do fft
-    # note this will be much slower if x_wins_han.shape[0] is not a power of 2
-    complex_spec = np.fft.rfft(x_wins_han, axis=0)
-
-    # calculate magnitude
-    mag_spec = (np.conjugate(complex_spec) * complex_spec).real
-    # same as:
-    #mag_spec = np.square(np.absolute(complex_spec))
-
-    # orient correctly and remove dc component
-    spec = mag_spec[1:, :]
-    spec = np.flipud(spec)
-
-    return spec
-
-def gen_spectrogram(audio_samples, sampling_rate, fft_win_length, fft_overlap, crop_spec=True, max_freq=256, min_freq=0):
-    """
-    Compute spectrogram, crop and compute log.
-    [might need to edit section about max and min frequency???]
-    """
-
-    # compute spectrogram
-    spec = gen_mag_spectrogram(audio_samples, sampling_rate, fft_win_length, fft_overlap)
-
-    # only keep the relevant bands - could do this outside
-    if crop_spec:
-        spec = spec[-max_freq:-min_freq, :]
-
-        # add some zeros if too small
-        req_height = max_freq-min_freq
-        if spec.shape[0] < req_height:
-            zero_pad = np.zeros((req_height-spec.shape[0], spec.shape[1]))
-            spec = np.vstack((zero_pad, spec))
-
-    # perform log scaling - here the same as matplotlib
-    log_scaling = 2.0 * (1.0 / sampling_rate) * (1.0/(np.abs(np.hanning(int(fft_win_length*sampling_rate)))**2).sum())
-    spec = np.log(1.0 + log_scaling*spec)
-
-    return spec
-
-def compute_features(audio_samples, sampling_rate, params):
-    """
-    Computes overlapping windows of spectrogram as input for CNN.
-    """
-
-    # load audio and create spectrogram
-    spectrogram = gen_spectrogram(audio_samples, sampling_rate, params.fft_win_length, params.fft_overlap,
-                                     crop_spec=params.crop_spec, max_freq=params.max_freq, min_freq=params.min_freq)
-    spectrogram = process_spectrogram(spectrogram, denoise_spec=params.denoise, smooth_spec=params.smooth_spec)
-
-    # extract windows
-    spec_win = view_as_windows(spectrogram, (spectrogram.shape[0], params.window_width))[0]
-    spec_win = zoom(spec_win, (1, 0.5, 0.5), order=1)
-    spec_width = spectrogram.shape[1]
-
-    # make the correct size for CNN
-    features = np.zeros((spec_width, 1, spec_win.shape[1], spec_win.shape[2]), dtype=np.float32)
-    features[:spec_win.shape[0], 0, :, :] = spec_win
-
-    return features
-
-### TESTING MORE ADVANCED FUNCTIONS
-# import sys 
-# sys.path.insert(0, '/home/dgabutler/Work/CMEEProject/Sandbox/batdetect/bat_train')
-# from data_set_params import DataSetParams
-# from skimage import filters
-# from skimage.util.shape import view_as_windows
-# from scipy.ndimage import zoom
-# from scipy.io import wavfile
-
-# params = DataSetParams()
-
-# sampling_rate, audio_samples = wavfile.read('/home/dgabutler/Work/CMEEProject/Data/clipped-whinnies/5A383EF0_1.WAV')
-# features = compute_features(audio_samples, sampling_rate, params=params)
