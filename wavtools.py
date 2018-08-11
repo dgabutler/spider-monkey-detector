@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 # Functions and scripts for processing .wav files and praat files
 # includes: - clipping 60 second files into short sections containing calls
 #           - obtaining time of recording from file name 
@@ -421,7 +419,7 @@ def augment_time_shift(file_name, desired_duration, min_overlap, num_augmentatio
             ### iterative counter in while loop
             i+=1    
 
-def augment_folder_time_shift(min_perc_overlap, avg_augs_per_clip):
+def augment_folder_time_shift(min_overlap, num_augmentations_per_clip):
     """
     Applies time shift augment to all clipped positives.
     Clips augmented for average specified number of times e.g. 3 will on average produce 3, but sometimes 2, 4, 0 etc., introducing element of randomness.
@@ -431,7 +429,7 @@ def augment_folder_time_shift(min_perc_overlap, avg_augs_per_clip):
     praat_files = sorted(os.listdir('/home/dgabutler/Work/CMEEProject/Data/praat-files'))
     file_names = [os.path.splitext(x)[0] for x in praat_files]
     for file in file_names:
-        augment_time_shift(file, 3000, min_perc_overlap, avg_augs_per_clip)
+        augment_time_shift(file, 3000, min_overlap, num_augmentations_per_clip)
 
 def augment_file_blend(file_name):
     """
@@ -452,6 +450,34 @@ def augment_file_blend(file_name):
     # mix files together
     combined = signal.overlay(noise)
     combined.export("/home/dgabutler/Work/CMEEProject/Data/aug-blended/"+aug_name+'.WAV', format='wav')
+
+def augment_file_vertical_roll(spectrogram):
+    """Fundamentally similar to roll function in git repo
+    of Kahl et al. 2017
+    For a given spectrogram, will randomly pitch shift it 
+    up or down by small amount.
+    E.g. np.roll(spect, -1, axis=0) would move everything
+    up by 1 in the frequency bins dimension
+    """
+    RANDOM = np.random.RandomState(100)
+
+    IM_AUGMENTATION = {#'type':[probability, value]
+                    'roll':[0.5, (0.0, 0.05)], 
+                    'noise':[0.1, 0.01],
+                    'noise_samples':[0.1, 1.0],
+                    }
+    AUG = IM_AUGMENTATION
+
+    spectrogram = np.roll(spectrogram, int(spectrogram.shape[0] * (RANDOM.uniform(-AUG['roll'][1][1], AUG['roll'][1][1]))), axis=0)
+    return spectrogram 
+
+def augment_gaussian_noise(spectrogram):
+        RANDOM = np.random.RandomState(100)
+        spectrogram += RANDOM.normal(0.0, RANDOM.uniform(0, 0.1), spectrogram.shape)
+        spectrogram = np.clip(spectrogram, 0.0, 1.0)
+        return spectrogram
+    
+
 
 ############ following function unused 
 def calc_time_steps(file, duration=None, sr=None):
