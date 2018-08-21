@@ -2,21 +2,27 @@
 \begin{document}
 
 \section{Introduction}
-\subsection{Rainforests}
-- contain x% of global biodiversity, threatened, critical that powerful/efficient monitoring techniques are developed to enable effective conservation actions 
-- one such approach is emerging due to technological and theoretical advancements, this is acoustic monitoring
+\subsection{Rainforests - important, understudied}
+- contain x% of global biodiversity, threatened, critical that powerful/efficient monitoring techniques are developed to enable effective conservation 
+- threats to biodiversity in highly biodiverse tropical regions are increasing (Alroy 2017)
+- understanding the full implications of these requires frequent monitoring on large enough scale \citep(Underwood et al. 2005, Porter et al. 2009) and over a sufficiently long period of time \citep(Porter et al. 2005)
+- however, at present there is a lack of sufficient effective monitoring systems \citep(Proen{\c{c}}a et al. 2016) 
+- it is imperative that large scale, cost-effective, long-term monitoring techniques are developed, especially for crucially important highly biodiverse regions
+- one such monitoring approach is emerging due to technological and theoretical advancements, this is passive acoustic monitoring
 
-\subsection{Bioacoustic Monitoring}
-STRENGTHS
-(huge amount of data which can be used to answer ecological questions, cryptic species, less biases from human presence, can be stored and further work done INCLUDING greatly increased repeatability of any study- an advantage over e.g. visual surveying), ASSESS EFFECTIVENESS OF CONSERVATION STRATEGIES (subtly stress this point, speak to Tom about good papers to bring in showing the importance and neglect of this element in conservation) 
-further advantage is development of audiomoths (cheaper) 
+\subsection{Passive Acoustic Monitoring (PAM)}
 
-however, 
-WEAKNESSES
-incredibly time-consuming and often infeasible (and another source of bias) to have expert listen to all data collected.
-- possibly difficult to answer some ecological questions e.g. understanding of diel activity of vocal patterns. 
+Passive acoustic monitoring (hereafter PAM) is the process of collecting acoustic data using sensors such as microphones in the field, which can then be analysed at a later date. The acoustic data collected can be used to answer a number of questions relating to the ecology and distribution of species \citep(Mellinger et al. 2011, Bader et al. 2015, Davies et al. 2016, Campos-Cerqueira and Aide 2016). This information can be used to aid in the design - location and habitat type - of protected areas \citep(Rayment et al. 2009). 
 
-there is a strong incentive to incorporate latest advances in...
+It holds promise as an efficient surveying tool for a number of reasons. When compared with traditional point count surveys, acoustic monitoring approaches reduce biases such as observer bias, detection bias (initial data collection is independent of observer skill level \citep{klingbeil2015bird}), and temporal bias, the latter having been shown in point count studies to result in missed behaviours and underestimated population sizes \citep{Bridges and Dorcas, 2000}. They also reduce levels of disturbance caused by field surveys \citep{K{\"u}hl and Burghardt, 2013}, avoiding the biases that this can introduce in surveying efforts \citep{alldredge2007time}. The area being surveyed can be increased in scale for a comparatively smaller increase in cost, allowing for ecological questions to be tested on large scales \citep{wrege2017}. The data collected forms a permanent record, which enables survey analyses to be repeatable, and any number of further analyses can be carried out (for example, testing of different ecological questions \citep(e.g. Newson et al. 2017) or investigations into changes of community composition). Furthermore, the data can be contributed to global repositories of biodiversity information, increasing the potential for widescale monitoring and modelling \citep{honrado2016fostering}.It also provides the ability to monitor cryptic species/behaviours \citep{wrege2017}, and to locate target species for e.g. pest control \citep{kiskin2017mosquito}. Where suitable, due to its comparatively low-cost, it could be used to evaluate the effectiveness of conservation actions \citep{wrege2017}, a crucial stage which is too often overlooked \citep(Ferraro and Pattanayak 2006)
+
+There are further reasons why PAM could be particularly beneficial for the surveying of highly biodiverse regions, such as rainforests. The advantage of associated reduction in observer effort \citep(Digby et al. 2013) is accentuated, as these areas are often remote and potentially difficult to access, allowing for data to be collected over longer time frames more easily. Acoustic monitoring approaches are much less seasonally restricted \citep(Shonfield and Bayne 2017), which is important in tropical biomes which often have prohibitive seasonal weather, and it becomes possible to survey in areas where direct observation of species may not be feasible.
+
+Significant technological improvements in recording devices - such as increasing the storage capabilities and weatherproofing while becoming much more affordable \citep{fanioudakis2017deep} - have also increased the potential and scale of PAM analyses. 
+However, these improvements, while allowing for a lot of data to be collected very efficiently, can cause significant challenges when it comes to the use of the data.
+
+With terrabytes of audio being generated, managing and analysying PAM data has been a significant problem \citep{villanueva2012pumilio}{shonfield2017autonomous}. Extraction of the sounds of interest requires an expert to spend a large amount of time listening to the recordings, and souces of bias can be introduced at this stage. As a result, it is common that only a fraction of data collected is able to be used to investigate biological hypotheses \citep{kobayasi2012classification}. Therefore there has been a strong incentive to incorporate techniques from the field of machine learning, in which algorithms can be designed that are capable of automating the processing element of the task. 
+
 
 \subsection{Machine Learning}
 - brief sentences summing up what machine learning is, what it can do
@@ -24,10 +30,15 @@ there is a strong incentive to incorporate latest advances in...
 - list some examples of (non-deep) ML used in ecology, mention that even in relatively recent works it was very hands-on and manual as well (see papers in tom-linked - Wrege's elephants, primates)
 - quite often is off-the-shelf, with limited success (Knight et al. 2017 review), especially in...
 
+Although there is a documented lack of communication between the two fields of research \citep{thessen2016adoption}
+
 \subsection{Very Biodiverse Regions}
 - particular limitation is in very biodiverse regions, due to challenges with hand-selected features
 - REVIEW OF ML IN VERY BIODIVERSE REGIONS, **this is a key feature of my project
 - stress **GAP IN DATABASES AND WORK** as described by Browning et al. 2017
+
+- traditional machine learning techniques can be very affected by poor weather conditions, with data containing wind and rain often having to be discarded \citep{stowell2018automatic}, clearly problematic if wanting to survey in rainforests  
+
 - therefore, there it is a big deal that emerging methods which automatically select features ('feature learning') are having a great deal of success. one such method is...
 
 \subsection{Deep Learning}
@@ -45,13 +56,14 @@ good example of all of the above coming together for high impact conservation re
 - high impact, very important species for ecosytem functioning (spread loads of seeds) in incredibly biodiverse areas
 - conservation status?
 
+--- keep this to be like 1 sentence. spider monkey is only model. 
+
 all things considered...
 \subsection{What I will do is..}
 
 - apply deep learning techniques to create an **automated detection system for spider monkey whinnys**. following similar work done previously (e.g. link with Kahl et al. 2017, but more on this in methods e.g. setting best parameters for CNNs etc)
-- will then use this to answer **ecological question** - what are the daily vocal activity patterns of spider monkeys? - when in the day are spider monkeys calling, when are they not calling. 
 - this type of research has been done before for a small number of other species 
-- this will act as pilot test to maximise efficiency for wider project, in which whole of Osa Peninsula of Costa Rica will be acoustically-monitored, and deep learning will enable the collection of a huge amount of ecological data on the spider monkeys
+- wider project - whole of Osa Peninsula of Costa Rica will be acoustically-monitored, and deep learning will enable the collection of a huge amount of ecological data on the spider monkeys
 - (possibly even for multiple calls)
 - reason being for design of wildlife corridors suitable for A. geoffroyi - as habitat of suitable for this target species is known to then be of sufficient quality for a number of other threatened species - to connect the populations currently isolated on the peninsula with unnocupied suitable habitat further inland)
 
@@ -81,6 +93,8 @@ aim - create an automated detection and classification system for spider monkey 
 - further negative clips generated from early runs of system on folders of files. same person listened to all three-second clips that had been pulled to one side with a confidence score of 60\% or above, this generated some more positive clips, but a great deal of negative clips 
 - original number of positives equalled X from data collected on Osa Peninsula plus Y from other sources 
 \subsection{Data: preprocessing, augmentation}
+- spectrogram representation, "mel spectrogram" - most commonly used strategy by teams in recent challenge \cite{stowell2018automatic} 
+- takes audio -> mathematical step (STFT) that decomposes the combined audio signal into its composite frequencies -> represents the amplitudes of different frequencies over time (SEE FIGURE)
 - standardised 
 - denoised, denoising function of 2013 team used by Kahl et al. in 2017. subtracts mean amplitude from each frequency band
 
@@ -126,6 +140,11 @@ figure X
 figure Y
 
 \section{Discussion}
+
+- \citep{stowell2018automatic} reported difficulties in their deep learning system detecting signals that were faint, with interference from masking noise being their second concern
+- for mine, highly likely monkeys will call multiple times (pers comm. Jenna) 
+
+
 
 \subsection{Why Do I Think It Didn't Work}
 \subsection{What Would I Do To Improve It With More Time}
