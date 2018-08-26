@@ -1,156 +1,219 @@
 \documentclass[11pt]{article}
+
+\usepackage{natbib}
+\usepackage[a4paper,margin=2cm]{geometry}
+\usepackage{setspace}
+
+
 \begin{document}
 
+\doublespacing
+
 \section{Introduction}
-\subsection{Rainforests - important, understudied}
-- contain x% of global biodiversity, threatened, critical that powerful/efficient monitoring techniques are developed to enable effective conservation 
-- threats to biodiversity in highly biodiverse tropical regions are increasing (Alroy 2017)
-- understanding the full implications of these requires frequent monitoring on large enough scale \citep(Underwood et al. 2005, Porter et al. 2009) and over a sufficiently long period of time \citep(Porter et al. 2005)
-- however, at present there is a lack of sufficient effective monitoring systems \citep(Proen{\c{c}}a et al. 2016) 
-- it is imperative that large scale, cost-effective, long-term monitoring techniques are developed, especially for crucially important highly biodiverse regions
-- one such monitoring approach is emerging due to technological and theoretical advancements, this is passive acoustic monitoring
+%\subsection{Effective monitoring of rainforests}
+Threats to biodiversity in highly biodiverse tropical regions are increasing (Alroy 2017). Understanding the full implications of these THINK ABOUT LINKING SECNTENCE ONE WITH THIS requires frequent monitoring on large enough scale \citep{underwood2005large,porter2009new} and over a sufficiently long period of time \citep{porter2005wireless}. However, at present there is a lack of sufficient effective monitoring systems \citep{proencca2017global}. It is imperative that cost-effective monitoring techniques that have the potential to be implemented at large scales and over long time periods are developed, especially for crucially important highly biodiverse regions. One such approach, emerging due to technological and theoretical advancements, is the combination of machine learning and passive acoustic monitoring.
 
-\subsection{Passive Acoustic Monitoring (PAM)}
+%\subsection{Passive acoustic monitoring (PAM)}
 
-Passive acoustic monitoring (hereafter PAM) is the process of collecting acoustic data using sensors such as microphones in the field, which can then be analysed at a later date. The acoustic data collected can be used to answer a number of questions relating to the ecology and distribution of species \citep(Mellinger et al. 2011, Bader et al. 2015, Davies et al. 2016, Campos-Cerqueira and Aide 2016). This information can be used to aid in the design - location and habitat type - of protected areas \citep(Rayment et al. 2009). 
+Passive acoustic monitoring (hereafter PAM) is the process of collecting acoustic data in the field using sensors such as microphones which can then be analysed at a later date. The acoustic data collected can be used to answer a number of questions relating to the ecology and distribution of species \citep{mellinger2011confirmation, bader2015mobility, davies2016ultrasonic,campos2016improving}. This information can be used to aid in the design - location and habitat type - of protected areas \citep{rayment2009use}. 
 
-It holds promise as an efficient surveying tool for a number of reasons. When compared with traditional point count surveys, acoustic monitoring approaches reduce biases such as observer bias, detection bias (initial data collection is independent of observer skill level \citep{klingbeil2015bird}), and temporal bias, the latter having been shown in point count studies to result in missed behaviours and underestimated population sizes \citep{Bridges and Dorcas, 2000}. They also reduce levels of disturbance caused by field surveys \citep{K{\"u}hl and Burghardt, 2013}, avoiding the biases that this can introduce in surveying efforts \citep{alldredge2007time}. The area being surveyed can be increased in scale for a comparatively smaller increase in cost, allowing for ecological questions to be tested on large scales \citep{wrege2017}. The data collected forms a permanent record, which enables survey analyses to be repeatable, and any number of further analyses can be carried out (for example, testing of different ecological questions \citep(e.g. Newson et al. 2017) or investigations into changes of community composition). Furthermore, the data can be contributed to global repositories of biodiversity information, increasing the potential for widescale monitoring and modelling \citep{honrado2016fostering}.It also provides the ability to monitor cryptic species/behaviours \citep{wrege2017}, and to locate target species for e.g. pest control \citep{kiskin2017mosquito}. Where suitable, due to its comparatively low-cost, it could be used to evaluate the effectiveness of conservation actions \citep{wrege2017}, a crucial stage which is too often overlooked \citep(Ferraro and Pattanayak 2006)
+It holds promise as an efficient surveying tool in hyperbiodiverse regions for a number of reasons. Generally, when compared with traditional point count surveys, acoustic monitoring approaches reduce biases such as observer bias, detection bias (initial data collection is independent of observer skill level \citep{klingbeil2015bird}), temporal bias (which has shown in point count studies to result in missed behaviours and underestimated population sizes \citep{bridges2000temporal}, and biases caused by high levels of disturbance often caused by field surveys \citep{alldredge2007time}. Meeting the requirements of more efficient surveying techniques, the area being surveyed can be increased in scale for a comparatively smaller increase in cost, allowing for ecological questions to be tested on large scales \citep{wrege2017acoustic}. The data can be contributed to global repositories of biodiversity information, increasing the potential for widescale monitoring and modelling \citep{honrado2016fostering}. Furthermore, the data collected forms a permanent record, which enables survey analyses to be repeatable, and any number of further analyses can be carried out (for example, testing of different ecological questions \citep(e.g. Newson et al. 2017) or investigations into changes of community composition). It also provides the ability to monitor cryptic species/behaviours \citep{wrege2017acoustic} and to locate rare species \citep{kiskin2017mosquito}. Where suitable, due to its comparatively low-cost, it could be used to evaluate the effectiveness of conservation actions \citep{wrege2017acoustic}, a crucial stage which is too often overlooked \citep{ferraro2006money}. Further reasons why PAM could be particularly beneficial in regions such as rainforests include that acoustic monitoring approaches are much less seasonally restricted \citep{shonfield2017autonomous} (important in tropical biomes which often have prohibitive seasonal weather) and it enables surveying of areas where direct observation of species may not be feasible. Also, the general advantage of associated reduction in observer effort \citep{digby2013practical} when using PAM approaches are accentuated as survey sites in hyperbiodiverse areas are often remote and potentially difficult to access, allowing for data to be collected over longer time frames more easily. Recent significant reductions in cost of surveying devices (from hundreds of pounds to as little as £X per unit for the recently developed AudioMoth devices (CITE X HILL?), as well as improvements to their memory capacity and factors such as weatherproofing \citep{fanioudakis2017deep}, have also increased the potential and scale of PAM analyses. However, these improvements, while allowing for a lot of data to be collected very efficiently, can cause significant challenges when it comes to the use of the data.
 
-There are further reasons why PAM could be particularly beneficial for the surveying of highly biodiverse regions, such as rainforests. The advantage of associated reduction in observer effort \citep(Digby et al. 2013) is accentuated, as these areas are often remote and potentially difficult to access, allowing for data to be collected over longer time frames more easily. Acoustic monitoring approaches are much less seasonally restricted \citep(Shonfield and Bayne 2017), which is important in tropical biomes which often have prohibitive seasonal weather, and it becomes possible to survey in areas where direct observation of species may not be feasible.
+With terrabytes of audio being generated, managing and analysying PAM data has been a significant problem \citep{villanueva2012pumilio,shonfield2017autonomous}. Extraction of the sounds of interest requires an expert to spend a large amount of time listening to the recordings, and unquantifiable souces of bias can be introduced at this stage. As a result of the processing time required, it is common that only a fraction of data collected is able to be used to investigate biological hypotheses \citep{kobayasi2012classification}. There has therefore been a strong incentive to incorporate techniques from the field of machine learning (hereafter ML), in which algorithms can be designed that are capable of automating the processing element of the task. 
 
-Significant technological improvements in recording devices - such as increasing the storage capabilities and weatherproofing while becoming much more affordable \citep{fanioudakis2017deep} - have also increased the potential and scale of PAM analyses. 
-However, these improvements, while allowing for a lot of data to be collected very efficiently, can cause significant challenges when it comes to the use of the data.
+%\subsection{Traditional machine learning in PAM - effectiveness and application in hyperbiodiverse regions}
 
-With terrabytes of audio being generated, managing and analysying PAM data has been a significant problem \citep{villanueva2012pumilio}{shonfield2017autonomous}. Extraction of the sounds of interest requires an expert to spend a large amount of time listening to the recordings, and souces of bias can be introduced at this stage. As a result, it is common that only a fraction of data collected is able to be used to investigate biological hypotheses \citep{kobayasi2012classification}. Therefore there has been a strong incentive to incorporate techniques from the field of machine learning, in which algorithms can be designed that are capable of automating the processing element of the task. 
+Although there is a documented lack of communication between the two fields of research \citep{thessen2016adoption}, traditional ML techniques such as support vector machines (REF REF REF), random forest (REF REF REF), and naive bayes (REF REF REF) have been applied to bioacoustic datasets for wide a variety of taxa (see comprehensive recent review by \cite{knight2017recommendations}). These algorithms compare key hand-designed features of sounds of interest - temporal (e.g. duration) or spectral (e.g. peak frequency) - with those in a learned sound library created using a training data set, and return the most likely match via the use of probabilistic scores \citep{reason2016recommendations}. 
 
+It is also possible to use software, but generally it is more succesful to use bespoke algorithms.
 
-\subsection{Machine Learning}
-- brief sentences summing up what machine learning is, what it can do
-- slow uptake point (lack of communication between ML researchers and ecologists)
-- list some examples of (non-deep) ML used in ecology, mention that even in relatively recent works it was very hands-on and manual as well (see papers in tom-linked - Wrege's elephants, primates)
-- quite often is off-the-shelf, with limited success (Knight et al. 2017 review), especially in...
+While excellent results have been reported using these traditional methods - although classification algorithms coming even close to expert observer accuracy rates are not common \citep{ovaskainen2018animal} - few attempts have been made to combine automated detection systems with PAM data in hyperbiodiverse regions such as rainforests \citep{browning2017passive}, a bias that also extends to availability of suitable training datasets. This lack of development and data has been reported as a major gap in the field at present \citep{browning2017passive}, and is due to key challenges of automated detection and classification in these regions. 
 
-Although there is a documented lack of communication between the two fields of research \citep{thessen2016adoption}
+CHALLENGES:
+--- NOISE
+ATTEMPTS, HOW THEIR PROBLEM DIFFERS FROM MINE:
+While some precedents 
+--- THIS PAPER DID IT, GOT THESE RESULTS
+--- THIS PAPER DID IT, GOT THESE RESULTS
 
-\subsection{Very Biodiverse Regions}
-- particular limitation is in very biodiverse regions, due to challenges with hand-selected features
-- REVIEW OF ML IN VERY BIODIVERSE REGIONS, **this is a key feature of my project
-- stress **GAP IN DATABASES AND WORK** as described by Browning et al. 2017
+- reason being: CHALLENGING
 
-- traditional machine learning techniques can be very affected by poor weather conditions, with data containing wind and rain often having to be discarded \citep{stowell2018automatic}, clearly problematic if wanting to survey in rainforests  
+complexity of real data. if signal overlaps with noise it can be difficult to detect, as it is a complex task to separate signal from noise \citep{ovaskainen2018animal}
+- variability in background levels of noise is thought to have generally limited the effectiveness of fully automated approaches \citep{heinicke2015assessing}, and rainforests are known to experience high levels of variation in noise throughout the days \citep{waser1977experimental}
+- traditional machine learning techniques can be very affected by poor weather conditions, with data containing wind and rain often having to be discarded \citep{stowell2018automatic}, which would clearly be a limitation in designing an effective surveying tool for use in rainforests
+-   
 
-- therefore, there it is a big deal that emerging methods which automatically select features ('feature learning') are having a great deal of success. one such method is...
+- While the hand-designed features are often selected intelligently using expert domain knowledge \citep{humphrey2013feature}, different species in tropics can have very similar calls \citep{zamora2016acoustic}
 
-\subsection{Deep Learning}
+% \subsection{Deep learning & application in PAM}
+
+As this can avoid the process of dimensionality-reduction (and therefore information loss) preceding selection of hand-designed features, this technique has been shown to substantially increase the accuracy and robustness of automated detection systems GOTTOCITE...(Stowell \& Plumbley 2014, Browning et al. 2017).
+- therefore, there it is a big deal that emerging methods which automatically select features ('feature learning') are having a great deal of success. Deep learning does this
+
+When leveraging the state-of-the-art performance of deep learning for audio classification, it is most common to convert each audio sample into a spectrogram, a visual representation of the sound enabling the problem to then be treated as an image classification task. This is done using a mathematical process, a Fourier transform, which decomposes the audio signal into its composite frequencies. The resulting image has frequencies (grouped into bins) on the y-axis, the amplitude (loudness) of the values in these bins shown as a heat level, and the x-axis representing time steps. Early machine learning research on speech processing commonly used logarithmically-scaled frequency bins, mimicking how human ears process sounds of differing frequencies, to create what is known as a mel-frequency spectrogram. This has been shown to continue to be a succesful transformation for preprocessing for deep learning methods, with many of the state-of-the-art classification approaches using it in a recent machine learning audio detection competiton \citep{stowell2018automatic}.
+
+It is known to be very challenging to build effective neural networks from scratch, with common practise being to chose an architecture from a recent paper achieving state-of-the-art results on a similar detection problem (sound classification using small datasets with data augmentation (PERHAPS SEE FIGURE ?? X). However, neural networks contain a number of alterable hyperparameters (see GLOSSARY for a detailed explanation of these terms) and configuring these can optimise the performance for a given problem. 
+
+A further preprocessing technique that has been shown to increase performance in tasks of this sort is to apply a function capable of 'denoising' spectrograms to increase the signal-to-noise ratio (CITE KAHL, AIDE)
+
+a crucial stage as CNNs are known to require a large amount of data, with even thousands of examples to produce truly state-of-the-art results),
+
 - advantages of deep learning over other methods (could perhaps be very few references to recent reviews or papers that used a couple).  
 - examples of deep learning methods used in ecology 
 - ***find key examples of it being more successful
 - difficulty has been in getting labelled datasets big enough
 - people have been working on this in recent years, lots of work on **data augmentation** (only specific augmentation methods may be effective given the classes of this problem - see Salamon and Bello 2016 for variable effectiveness of augmentation) and **transfer learning**
 
-good example of all of the above coming together for high impact conservation research is...
+This is the process of applying various transformations to the data to artificially create new samples with which to train the network. Many common augmentation techniques used in image classification cannot be applied when visually representating audio data for classification, such as the mirrored flipping of the sample (it is semantically valid to say a mirrored image of a cat is still a cat, whereas the same cannot be said for a (non-symmetric) visualisation of a sound). A further key benefit of the augmentations is to increase the generalisability of the system: applying augmentations that mimic a wide variety of conditions possible in the test data (such as overlapping of signal and a prominent noise) that may well have been absent from the training data. 
 
-\subsection{Monitoring of Spider Monkeys}
-- suitability of species for this type of monitoring approach: heavily reliant on acoustic communication due to being almost entirely arboreal, frugivorous (patchily-distributed food) with complex fission-fusion societies 
-- have an array of calls of known meaning (but fundamentally we'll first be working with presence/absence only)
-- high impact, very important species for ecosytem functioning (spread loads of seeds) in incredibly biodiverse areas
-- conservation status?
+To knowledge, little applied in rainforests, for example to survey primates.
 
---- keep this to be like 1 sentence. spider monkey is only model. 
+%\subsection{Case study - deep learning and PAM to monitor spider monkeys}
+- monitoring primates
+- some ML techniques have been applied (ref, ref, ref), but maybe couldn't work here
 
-all things considered...
-\subsection{What I will do is..}
+In this project, as a case study, I will develop a basic automated detection system for one particular call - the 'whinny' - of the endangered neotropical primate Geoffroy’s spider monkey, \textit{Ateles geoffroyi}. This species is well-suited for this analysis as they are heavily reliant on acoustic communication, due to being almost entirely arboreal, frugivorous (with patchily-distributed food), and living in complex fission-fusion societies splitting into subgroups to forage \citep{ramos2008communication}. I will train this network using prelimary data from a wider project for which this detection system is intended to be used as a surveying tool, assessing the current distribution of \textit{Ateles geoffroyi} over the large scale (X km!^2) for Osa peninsula of Costa Rica in order to build wildlife corridors to connect currently isolated populations. 
 
-- apply deep learning techniques to create an **automated detection system for spider monkey whinnys**. following similar work done previously (e.g. link with Kahl et al. 2017, but more on this in methods e.g. setting best parameters for CNNs etc)
-- this type of research has been done before for a small number of other species 
-- wider project - whole of Osa Peninsula of Costa Rica will be acoustically-monitored, and deep learning will enable the collection of a huge amount of ecological data on the spider monkeys
-- (possibly even for multiple calls)
-- reason being for design of wildlife corridors suitable for A. geoffroyi - as habitat of suitable for this target species is known to then be of sufficient quality for a number of other threatened species - to connect the populations currently isolated on the peninsula with unnocupied suitable habitat further inland)
-
-
-- sentence describing technological and theoretical advancements leading to this being an exciting time in ecology, an incredibly powerful tool for species monitoring at a critical time 
-
-
-
-
-CONCLUDING PART OF INTRO - clearly define aims of research project and any hypotheses tested
-
-aim - create an automated detection and classification system for spider monkey calls, accurate enough (or with the potential to be accurate enough, if subsequently labelled examples of calls are used to supplement training) to be used as a tool in species occupancy modelling the distribution on the Osa Peninsula of Costa Rica
+As this data contains high levels of background noise I will investigate deep learning techniques that may enable effective generalisable monitoring in rainforests, varying architecture design and audio preprocessing techniques (denoising and standardising). Due to the very small current size of the training dataset, I will also experiment with data augmentation, implementing several methods used by teams that have worked on similar problems. As more data will be collected as part of the wider project, I will test the effect of increasing data on the performance of the system (termed a 'learning curve') to assess whether performance is limited by data availability or architecture design. Finally I will use a grid search approach to optimise the current system based on the findings of the most effective combination of preprocessing techniques. 
 
 	
 \section{Methods} 
 \subsection{Data: collection and labelling}
-- fieldwork:
-	- recordings of rainforest collected using AudioMoth recording devices
-	- devices were fastened to trees for approximately three days
-	- possibility of damamge influenced placement, water-damage meant we didn't collect as much as was possible but a lot was collected (work that goes towards filling data-gap in recordings from these regions)
-	- 1 month of data-collecting
-- ASK JENNA FOR ESTIMATE FOR HOW MUCH SHE HAD LISTENED TO. perhaps. 
-- labelling using Praat files, into regions of 'call' and 'non-call'
-- consistent labelling, done by one person (authority figure, several years experience listening to spider monkey calls)
-- positive clips: 3 seconds long as all calls fit within this window, average duration of call equals DO THIS CALC AT LATER DATE
-- negative clips: 3 seconds long, sampled randomly from regions of call-containing 60-second clips known to not contain calls  
-- further negative clips generated from early runs of system on folders of files. same person listened to all three-second clips that had been pulled to one side with a confidence score of 60\% or above, this generated some more positive clips, but a great deal of negative clips 
-- original number of positives equalled X from data collected on Osa Peninsula plus Y from other sources 
+
+The original data was continuous recordings of rainforest sounds on the Osa Peninsula, a portion of which was collected in December 2017, which was then supplemented by data I collected during one-month of fieldwork in May 2018. We used AudioMoth recording devices (CITE X HILL?, which create minute-long files '.wav' files named with the time and date of recording. We made the recordings by fastening the devices to trees for periods of approximately three days, orienting the omnidirectional microphone upwards and angled into unsheltered areas of the forest so as to give the best chance of recording clear spider monkey calls. The possibility of water damamge influenced how they were placed (for example slightly sheltered by vegetation); however, some water damamge did cause some data loss. Nonetheless, over the two recording periods we collected a total of X hours of data.
+
+A primatologist with four years of experience listening to spider monkey calls listened to X hours of the recordings, seperating out minute-long clips containing the signal of interest (a spider monkey 'whinny'). She then created label files in the software PRAAT (cite X) containing the start and end times of periods with and without the call. Using Python, I wrote functions capable of reading the label files to then clip the audio files into three second 'positive' sections containing a call. As calls were X second long on average, with a standard deviation of X, the longest of which was 2.X seconds, I decided that a three second window was suitable. X et al reported that it was most beneficial to train their neural network detector using positives from as many different locations within the study region as possible, to increase the diversity of invidual calls. Due to a lot of the data labelling being done before the start of the project most of the positives (X/124) used to train the network were from one location. However, a portion of positives added in the later stages were from different locations, X/124 from SHADY LANE, X/124 from OSA, and X/124 from Corcovado National Park (the latter not being collected by us but taken from CORNELL WEBSITE with permission of X). As this detector is intended to only be used in one region I only used positive examples from individuals in the region to train the detector (as recommended by \cite{knight2017recommendations}), forgoing the opportunity to add positive clips from ITALIC Ateles geoffroyi recorded in Mexico.
+
+I created the 'negative' training examples (three second clips known to not contain the signal of interest) in a three ways: (1) random sampling in call-containing minute-long clips from regions known to not contain calls; (2) carrying out a process of 'hard-negative mining' (as done by \cite{mac2018bat}) in which an early-stage trained version of the detector was ran on minute-long clips that have labelled call and non-call regions, separating any three-second sections classified as being postive (but known to be negative), and; (3) early-stage versions of the detector were also run on entire folders (one recording location, over a period of days, constituted one folder of files), and the same individual that originally labelled the calls listened to a large number of the positively-classified clips, separating out any false positives (clips not contain the signal of interest). I applied the hard-negative mining technique as \cite{mac2018bat} reported significant improvements as a result of this training on more challenging examples. 
+
+In total, the original dataset with which to train the network consisted of 124 positive clips and an equal number of negative examples (classes balanced as done by \cite{mac2018bat} and \citep{kiskin2017mosquito} for similar neural network binary detection problems). For a given location, I balanced the number of negatives with the number of positives so as to not introduce any biases by overrepresenting certain locations (which may have had different levels/combinations of background noise). This was not possible for the few positive calls from Corcovado National Park, but I balanced these with further negatives from Catappa. For locations with both hard-negative mined negatives and randomly sampled negatives, I added an equal ratio of both.   
+
 \subsection{Data: preprocessing, augmentation}
-- spectrogram representation, "mel spectrogram" - most commonly used strategy by teams in recent challenge \cite{stowell2018automatic} 
-- takes audio -> mathematical step (STFT) that decomposes the combined audio signal into its composite frequencies -> represents the amplitudes of different frequencies over time (SEE FIGURE)
-- standardised 
-- denoised, denoising function of 2013 team used by Kahl et al. in 2017. subtracts mean amplitude from each frequency band
 
-- AUGMENTED:
-I followed several augmentation methods of Kahl et al. 2017
-	- Gaussian noise
-	- noise blending
-	- vertical pitch roll 
+I converted all raw audio clips to mel-frequency spectrograms (with X as the parameters for the FFT) to make them suitable for inputing to the CNN. To denoise the spectrograms, I chose the denoising function of \cite{aide2013real} - also used in the competition-winning binary detection system of \cite{kahl2017large}. This function works by subtracting the mean amplitude of each frequency bin from all values in that bin, keeping only particularly loud signals present in the spectrogram. To standardise the inputs (bounding them between 0 and 1), I divided all values (amplitudes) in each input spectrogram by the largest value in the spectrogram (pers. comm  X Sethi).
 
-plus I used a random crop augmentation to ensure the network was trained on calls that had been interupted part-way through (a very important stage as the full system splits minute-long files into three-second clips for testing, making it very likely that calls will be at least slightly interupted)
+I implemented several data augmentation methods used by \cite{kahl2017large} known to be valid for use on audio data (i.e. retaining the semantic validity of the label). These were the addition of Gaussian noise - adding random proportion X - to the mel-spectrograms, and blending of positive clips with negatives clips containing prominent noise (followed by renormalising). 
 
-To investigate the effects of the various preprocessing techniques, I trained and tested the system on with and without all changes in all combinations.
+These augmentations were adding a varying amount of Gaussian noise (slight distortion) to the mel-spectrograms once generated, slightly decreasing the signal-to-noise ratio, and also producing spectrograms representing articial situations in which the spider monkey whinny overlapped with noise, such as a chirping bird or a howler monkey calling in the distance. To do the latter, I selected a number of three-second 'noise' clips, and the augmentation function would randomly select from these, add together mel-frequency spectrograms of the 'signal' and 'noise' clips, and renormalise to ensure the background noise levels had not been articially doubled. These stages are easily implemented: as a spectrogram is represented as a matrix of frequency rows and time-step columns - with the values representing the amplitude - random additions of very small values, or combining two spectrograms representing seperate noises, are valid processes.   
 
-- augmentations are crucial in increasing the sample sizes of rare sounds for training CNNs (which are known to require a large amount of data, e.g. thousands of examples at a minimum, to reach state-of-the-art results)
-- they also increase generalisability of the system, if the training data undergoes augmentations that mimic a wide variety of conditions possible in the test data (such as overlapping of signal and a prominent noise, like a howler monkey or a chicken), that may well have been absent from the training data
+I also developed a random crop augmentation function, in which the full positive-containing clips and the labels are used to reclip three-second positive clips, but the calls are repositioned within the window of the clip with a high probability that they are at least part-way cut off (retaining a minimum of 20\% of the call within the window). This was to ensure the that network was trained on calls that had been interupted part-way through, a stage I belied to be important as the full system splits minute-long files into three-second clips for testing, increasing the possibility that any calls present will span seperate input clips. 
 
-\subsection{Detector: design and training}
-- general architecture taken from Salamon and Bello 2016, a standard design that achieved excellent results in a similar problem 
-- ADD FIGURE OF ARCHITECTURE
-- implemented in Python package Keras, using Theano as a backend 
-- trained using three-second clips, labelled as either being negative ('0') or positive ('1')
-- although initially keeping the classes (positive and negative) balanced, as is often done in machine learning, I experimented with a biased training ratio which was more reflective of the true ratio of positive to negative clips in the original data
-- mention hyperparams to set up next section 
-\subsection{Detector: optimisation and testing}
-- performance evaluated using stratified 10-fold cross-validation 
-- generates ten sets of train/test data from original dataset, maintaining a similar ratio of positives and negatives. the model is then retrained for each set giving a comprehensive picture of model performance (a chosen metric can be reported as the average of ten indepenent training instances, with a measure of spread such as standard deviation) 
-- although it's recommended that general overall network architecture is taken from the literature, within that, optimal hyperparameters for neural networks vary on a problem-by-problem basis (WHY?). therefore, I used a grid search approach to test all combinations of a number of different options (activation layer, optomiser algorithm, number of hidden layers, including batch-normalisation or not, learning rate, number of epochs to train network for, dropout percentage)
-- grid search implemented in Python package hyperas
+I investigated the performance of the system with and without the augmentation stages added. 
+
+Although rarely done in the ecology machine learning literature, I applied statistical tests to determine whether the metrics for each modification (preprocessing/augmentation) were significantly different to the metric values of the control in which nothing was changed. Due to using stratified 10-fold cross-validation, each manipulation investigated had ten of each metric value (precision, recall, and F1) for each separately trained CNN. Therefore, as the assumption of independent samples was violated (each sample was used as training data in nine of the models), I used Wilcoxon signed ranks tests over Student's t-tests as they have more statistical power when this assumption is violated \citep{brownlee2018statistical}.
+
+
+\subsection{Detector: design, optimisation and training}
+
+The deep learning classifier at the center of the overall detection system was a convolutional neural network (CNN, or ConvNet) (SEE FIGURE ?? X), using the architecture of \cite{salamon2017deep} that had achieved very good results on a similar detection problem (sound classification using small datasets with data augmentation). The network hyperparameters that commonly vary between papers tackling similar detection problems include the optimiser chosen, the learning rate, batch size, the type of activation layer, inclusion or exclusion of batch-normalisation layers, the dropout percentage, and number of neurons in the fully-connected layers at the end of the network. To test all possible combinations of the hyperparameters under investigation I implemented an approach called 'grid-searching', which train CNNs on all possible combinations of the choices for the hyperparameters to determine the optimal combination on a problem-specific basis. The type of data (preprocessed/augmented) I used for this optimisation step was that which resulted in the best performance of the network prior to optimisation. 
+
+I trained the neural net for 40 epochs (a measure of machine learning training time, where one epoch is the number of training steps required for the network to have trained on every sample in the training set), as preliminary investigations showed that this was enough time to record the optimal perfomance of the models before overfitting occured (a common issue with small datasets in which the network begins to learn the exact patterns of the data rather than the general trends, reducing its ability to generalise to unseen data).  
+
+\subsection{Detector: evaluation}
+
+Several different metrics can be then used to report the performance of an ML detection algorithm, each placing varying levels of importance on the numbers of the following: true positives (positives correctly classified), true negatives (negatives correctly classified), false positives (negatives incorrectly considered to be positive), and false negatives (positives incorrectly considered to be negative). There is a reported inconsistency between the ecology literature and the ML literature in what ecologists are referring to with certain metric names; however, the recent best-practice paper by \cite{knight2017recommendations}, uniting standards in ML and ecology, recommends that all single-species detectors report precision (the proportion of clips reported as being positive that were actually true positives), recall (the proportion of true positives detected compared with the total number of positives to be found in the test dataset), F1 score (the harmonic mean of precision and recall), and the area under the precision-recall curve, to allow for unambiguous comparision between investigations. While reporting all of these give an overall picture of the performance of the system, different metrics may be more important for different tasks; for example, it may be more important to maximise recall value for a system that is surveying for rare species and it will be possible to spend more time manually processing the results to seperate out true positives from false positives. 
+
+To evaluate the performance of the detector, I followed the best-practise recommendations of \cite{knight2017recommendations}, and recorded the metrics recall, precision, and F1. EXPLAIN. For each of the elements I was investigating, I used stratified 10-fold cross-validation, which is regarded as the most comprehensive method of evaluating the performance of a neural net. In this method the complete dataset is split into 10 'folds' (maintaining the proportion of positives and negatives in each fold). Ten CNNs are then created, with each being trained on a different withheld portion of the overall dataset, allowing me to obtain average metric values with an indication of measure of spread. 
+
+As much more labelled positive data will be collected over the next few years as part of the wider project, I carried out a 'learning curve' investigation to see whether training on a larger number of samples (without artificially creating them using augmentation) had a noticeable increase on network performance. I ran stratified 10-fold cross-validations, randomly selecting 50, 75, 100, and then all 124 positives (balanced by the same number of randomly selected negatives), and recorded the average detector performance at each level.  
+
+- very small dataset, investigated whether increasing data increased performance
+- 'learning curve'
+ 
 \subsection{Overall system design and functionality}
-- iterates over folder of 1-minute long files (as produced by AudioMoth recording devices, BUT WILL HOPEFULLY BE ABLE TO WORK WITH (almost) ANY LENGTH FILE)
-- for each file, splits it into twenty 3-second clips 
-- each clip is then fed into the CNN, which outputs the resulting activation value of the last (output) layer of the network (a value between 0 and 1), and if this value is above a threshold activation value (e.g. 0.7) - specified by the user at runtime - the clip is considered to contain the signal 
-- the system was tested (precision, recall etc.) with a threshold of X, but the option is there to alter the threshold to alter the sensitivity of the system (tradeoff between false positives and false negatives)
 
-OUTPUTS OF SYSTEM:
-- a folder containing all detected-positive three second clips (informatively labelled with the original file name of the 60-second clip, the time location within the clip they came from i.e. the start and end of three-second interval, a number representing which of the total number of detected clips from their file they were, and the activation value multiplied by 100 acting as a proxy of confidence) e.g. 
-- a summary CSV file of all detected clips, with headings file name, approx. position in recording (secs), the time and date of recording of the original file (calculatable as the recording device automatically labels the files using a hexadecimal code representing the date-time of recording), and the confidence of the CNN's classification (again, calculated using activation value of output layer for each clip). 
+The overall detection system iterates over folder of one-minute long files (as produced by the AudioMoth recording devices). For each file, it splits it into twenty three-second clips, which are sequentially inputted into the trained CNN. Each resulting activation value of the last (output) layer of the network (a value between 0 and 1) is checked, and if this value is above a threshold activation value (e.g. 0.5) - specified by the user at runtime - the clip is considered to contain the signal. The metrics reported for the CNN peformance were tested with a threshold of 0.5, but I have included the option to alter the threshold when running the system as a whole to allow for the altering of the sensitivity of the system - increasing the threshold would decrease the number of false positives, but also increase the number of false negatives (calls that are more difficult to detect).
 
-RUNTIME OF SYSTEM (or perhaps this should be in Results): approx. one second per file, so a folder of four thousand 60-second recordings takes just over an hour. TEST THIS AGAIN WHEN I DO OVERNIGHT RUNS.
+I programmed the system to give two outputs: (1) a folder containing all detected-positive three second clips (informatively labelled with the original file name of the 60-second clip, the time location within the clip they came from i.e. the start and end of three-second interval, a number representing which of the total number of detected clips from their file they were, and the activation value multiplied by 100 acting as a proxy of confidence); and (2): a summary CSV file of all detected clips, with headings file name, approx. position in recording (secs), the time and date of recording of the original file, and the confidence of the CNN's classification (again, calculated using activation value of output layer for each clip). 
 
 \section{Results}
-figure X
-figure Y
+
+Of the different preprocessing techniques I investigated - standardising, denoised, and the combination of standardising and denoising - none had a significant increase on the performance of the system for the metrics recorded. While the same was true for the precision and F1 scores of the network trained on augmented data, there was a highly significant (p < 0.005) increase in the average recall of the CNN trained on augmented data. 
+
+The learning curve investigating classifier performance at progressively increasing training dataset sizes (see figure X) showed that, for the very limited sample sizes at present, an increase of number of positives (with a corresponding increase in negatives) did not increase the performance of the classifier.
+
+Some patterns emerged as a result of the grid search investigating optimum configurations of hyperparameters (see TABLE X). The best activation layers to use were X, it was better to X include/exlude batch normalisation layers, and the 64 units in the fully connected layer originally in the network of \citep{salamon2017deep} were better/worse X than increasing this to 128 units. The suggested values of dropout were HIGHER X than the p = 0.5 used in the originally proposed architecture, with the optimum accuracy being obtained using p = X in the first dropout layer and p = X in the subsequent dropout layer.
+
+\begin{table}[]
+\begin{tabular}{l}
+Model with grid-search parameters (optimum combination in bold) \\
+Conv1, 24x5x5, Stride (1,1)                                     \\
+Max Pooling, Size (4x2)                                         \\
+Activation: relu/elu                                            \\
+Batch Normalisation: with/without                               \\
+Conv2, 48x5x5, Stride (1,1), Valid Padding                      \\
+Max Pooling, Size (4x2)                                         \\
+Activation: relu/elu                                            \\
+(Batch Normalisation: with/without)                             \\
+Flatten                                                         \\
+Dropout, p=                                                     \\
+Dense, 64/128 neurons                                           \\
+Activation: relu/elu                                            \\
+Dropout, p=                                                     \\
+(Batch Normalisation: with/without)                             \\
+Sigmoid Output                                                 
+\end{tabular}
+\end{table}
+
+RUNTIME OF SYSTEM AS A WHOLE: (or perhaps this should be in Results): approx. one second per file, so a folder of four thousand 60-second recordings takes just over an hour. TEST THIS AGAIN WHEN I DO OVERNIGHT RUNS.
 
 \section{Discussion}
+
+SEMI-SUPERVISED LEARNING TO OBTAIN MORE DATAPOINTS: 
 
 - \citep{stowell2018automatic} reported difficulties in their deep learning system detecting signals that were faint, with interference from masking noise being their second concern
 - for mine, highly likely monkeys will call multiple times (pers comm. Jenna) 
 
+\section{Glossary}
+backpropagation - the progressive altering the weights (strengths) of connections in the network to lessen how incorrect the predictions of the network are
+optimiser - the mathematical method determining how the network should carry out 
+batch size - how many samples are shown to the network before an instance of backpropagation occurs 
+activation layers - a step determining, based on the input to each neuron in the neural network layer, whether those neurons should in turn fire
+dropout - 
 
-
-\subsection{Why Do I Think It Didn't Work}
-\subsection{What Would I Do To Improve It With More Time}
 - Other Algorithms
 
 - genetic algorithms: more efficient way to search for hyperparameters 
-- 
+
+- I kept the classes (positive and negative) balanced, as is often done in machine learning. Ratio would be very biased. Maybe someone should alter. 
+
+- McMara \cite{stkapor2017evaluating}
+
+ I experimented with a biased training ratio which was more reflective of the true ratio of positive to negative clips in the original data
+
+
+DISCUSSION POINTS
+
+major limitation - CAUTION AGAINST INTERPRETING STRENGTH OF IMPROVEMENT IN RECALL, AS ASSUMPTION OF INDEPEDENCE OF WITHHELD TEST SET WAS VIOLATED 
+
+I tried these things, but what's important is increased value of recall
+EMPHASISE IMPORTANCE OF RECALL.
+- HIGH RECALL IN AUGMENTED MEANS TIME-SAVER
+
+
+- why not standardising?
+- why not denoising?
+- why no improvement in learning curve? - threshold?
+
+Next steps to try:
+- certainly transfer learning
+- more sophisticated methods for optimising architecture. grid search only goes so far (e.g. kernels)
+- exploring 1D kernels 
+- CNN for feature extraction, then added into SVM (reference)
+- other augmentations (pitch roll) - ran out of time
+- learning curve including augmented data, as it had a significantly beneficial effect on the data
+- unabalanced datasets
+- early stopping during training to prevent overfitting - enables more robust statistical testing
+- look into literature for RSED
+- increase run-time speed of system by rewriting in e.g. Cython such as
+
+However, once networks overfit, the metric performance on the validation set will begin to fall. Therefore the preferable alternative would be to only save the weights of the model if they increase
+
+- CHECK DISCUSSION POINTS PAGE FOR THINGS TO ADD
+
+- concluding sentence describing technological and theoretical advancements leading to this being an exciting time in ecology, an incredibly powerful tool for species monitoring at a critical time 
+
+\bibliographystyle{agsm}
+\bibliography{thesis}
 
 \end{document})

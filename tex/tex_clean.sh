@@ -7,4 +7,5 @@ texdir="/home/dgabutler/Work/CMEEProject/Code/tex"
 rm "$texdir"/*.gz
 rm "$texdir"/*.aux
 rm "$texdir"/*.log
-
+rm "$texdir"/*.bbl
+rm "$texdir"/*.blg
