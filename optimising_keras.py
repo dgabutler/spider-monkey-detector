@@ -27,22 +27,16 @@ def data():
     the data into a given train/test proportion.
     """
 
-    run_type = 'all_aug'
+    run_type = 'standardised'
     sr = 48000
-    train_perc = 0.8
+    train_perc = 0.9
 
     if sr == 48000:
         time_dimension = 282
     if sr == 44100:
         time_dimension = 259
 
-    dataset = essential.compile_dataset(run_type, sr)
-    random.shuffle(dataset)
-    n_train_samples = int(round(len(dataset)*train_perc))
-    train = dataset[:n_train_samples]
-    test = dataset[n_train_samples:]    
-    x_train, y_train = zip(*train)
-    x_test, y_test = zip(*test)
+    x_train, y_train, x_test, y_test = essential.compile_dataset(run_type, sr)
 
     # reshape for CNN input
     x_train = np.array([x.reshape((128, time_dimension, 1)) for x in x_train])
@@ -120,13 +114,13 @@ def create_model(x_train, y_train, x_test, y_test):
 
     model.fit(
         x=x_train, y=y_train,
-        epochs=50, # 50
+        epochs=40, # 50
         batch_size={{choice([8, 16, 32])}}, # 32
         verbose=2, 
         validation_data= (x_test, y_test))
 
     score, acc = model.evaluate(x=x_test, y=y_test, verbose=0)
-    # print('Test accuracy:', acc)
+    print('Test accuracy:', acc)
     return {'loss': -acc, 'status': STATUS_OK, 'model': model}
 
 if __name__ == '__main__':
@@ -143,7 +137,7 @@ if __name__ == '__main__':
     best_run, best_model = optim.minimize(model=create_model,
                                         data=data,
                                         algo=tpe.suggest,
-                                        max_evals=5,
+                                        max_evals=30,
                                         trials=Trials())
     x_train, y_train, x_test, y_test = data()
     print("Evaluation of best performing model:")

@@ -59,68 +59,84 @@ without <- as.data.frame(npyLoad('../Results/WITHOUT.npy'))
 colnames(without) <- c("accs","losses","precs","recs","f1s")
 without <- data.frame(lapply(without[c("precs","recs","f1s")], prop_to_perc))
 without <- stack(without)
-without$preprocessing <- "none"
+without$manipulation <- "none"
 colnames(without)[2] <- "metric"
 #
 standard <- as.data.frame(npyLoad('../Results/STAND.npy'))
 colnames(standard) <- c("accs","losses","precs","recs","f1s")
 standard <- data.frame(lapply(standard[c("precs","recs","f1s")], prop_to_perc))
 standard <- stack(standard)
-standard$preprocessing <- "standardised"
+standard$manipulation <- "standardised"
 colnames(standard)[2] <- "metric"
 #
 denoised <- as.data.frame(npyLoad('../Results/DENOISED.npy'))
 colnames(denoised) <- c("accs","losses","precs","recs","f1s")
 denoised <- data.frame(lapply(denoised[c("precs","recs","f1s")], prop_to_perc))
 denoised <- stack(denoised)
-denoised$preprocessing <- "denoised"
+denoised$manipulation <- "denoised"
 colnames(denoised)[2] <- "metric"
 #
 denoised_standard <- as.data.frame(npyLoad('../Results/DENOISED_STAND.npy'))
 colnames(denoised_standard) <- c("accs","losses","precs","recs","f1s")
 denoised_standard <- data.frame(lapply(denoised_standard[c("precs","recs","f1s")], prop_to_perc))
 denoised_standard <- stack(denoised_standard)
-denoised_standard$preprocessing <- "denoised_standard"
+denoised_standard$manipulation <- "denoised_standard"
 colnames(denoised_standard)[2] <- "metric"
 #
-aug <- as.data.frame(npyLoad('../Results/ALL_AUG.npy'))
-colnames(aug) <- c("accs","losses","precs","recs","f1s")
-aug <- data.frame(lapply(aug[c("precs","recs","f1s")], prop_to_perc))
-aug <- stack(aug)
-aug$preprocessing <- "aug"
-colnames(aug)[2] <- "metric"
+crop_aug <- as.data.frame(npyLoad('../Results/CROP_AUG.npy'))
+colnames(crop_aug) <- c("accs","losses","precs","recs","f1s")
+crop_aug <- data.frame(lapply(crop_aug[c("precs","recs","f1s")], prop_to_perc))
+crop_aug <- stack(crop_aug)
+crop_aug$manipulation <- "crop_aug"
+colnames(crop_aug)[2] <- "metric"
+#
+all_aug <- as.data.frame(npyLoad('../Results/ALL_AUG_UNBIASED.npy'))
+colnames(all_aug) <- c("accs","losses","precs","recs","f1s")
+all_aug <- data.frame(lapply(all_aug[c("precs","recs","f1s")], prop_to_perc))
+all_aug <- stack(all_aug)
+all_aug$manipulation <- "all_aug"
+colnames(all_aug)[2] <- "metric"
+#
+crop_aug_denoised <- as.data.frame(npyLoad('../Results/CROP_AUG_DENOISED.npy'))
+colnames(crop_aug_denoised) <- c("accs","losses","precs","recs","f1s")
+crop_aug_denoised <- data.frame(lapply(crop_aug_denoised[c("precs","recs","f1s")], prop_to_perc))
+crop_aug_denoised <- stack(crop_aug_denoised)
+crop_aug_denoised$manipulation <- "crop_aug_denoised"
+colnames(crop_aug_denoised)[2] <- "metric"
 
-#### COMPARISON OF PREPROCESSING TECHNIQUES
+
+#### COMPARISON OF MANIPULATIONS 
 
 # PLOTTING:
-
-all_manipulations <- rbind(without,standard,denoised,denoised_standard,aug)
-all_manipulations$manipulation <- as.factor(all_manipulations$manipulation)
-all_manipulations
+valid_manipulations <- rbind(crop_aug_denoised,crop_aug,all_aug)
+valid_manipulations$manipulation <- as.factor(valid_manipulations$manipulation)
+valid_manipulations
 
 # summary stats for stats
-summary_manipulations <- ddply(all_manipulations, c("metric", "preprocessing"), summarise,
-               N    = length(values),
-               mean = mean(values),
-               sd   = sd(values),
-               se   = sd / sqrt(N))
+summary_manipulations <- ddply(valid_manipulations, c("metric", "manipulation"), summarise,
+                               N    = length(values),
+                               mean = mean(values),
+                               sd   = sd(values),
+                               se   = sd / sqrt(N))
 
-summary_manipulations$preprocessing <- factor(summary_manipulations$preprocessing, levels=c("none","standardised","denoised","denoised_standard","aug"))
+summary_manipulations$manipulation <- factor(summary_manipulations$manipulation, levels=c("crop_aug_denoised","crop_aug","all_aug"))
 
 ### PLOT
 dev.off()
-met <-ggplot(summary_manipulations, aes(y=mean, x=metric, color=preprocessing, fill=preprocessing)) +
+val <-ggplot(summary_manipulations, aes(y=mean, x=metric, color=manipulation, fill=manipulation)) +
   ggtitle("Effect of manipulating input data (preprocessing/augmenting) \non various measures of CNN performance") +
   ylab("mean (%)") +      
   geom_bar(position=position_dodge(), stat="identity") + 
+  geom_hline(yintercept=50, linetype="dotted") + 
   geom_errorbar(aes(ymin=mean-se, ymax=mean+se),
                 color="black", 
                 width=.2,                    
                 position=position_dodge(.9))
 
-met <- met + annotate("text", x=3.365, y=99, label="**", size=6) 
+# met <- met + annotate("text", x=3.365, y=99, label="**", size=6) 
 
-print(met)
+ggsave('../Results/valid_manipulations.pdf')
+print(val)
 
 # each technique compared to baseline of no method used:
 
@@ -177,22 +193,29 @@ wilcox.test(recs ~ preprocessing, data=denoised_standard_vs_not) # p-value = 0.7
 
 #### AUGMENTATION VS. NO AUGMENTATION
 
+without <- as.data.frame(npyLoad('../Results/WITHOUT.npy'))
+colnames(without) <- c("accs","losses","precs","recs","f1s")
+without <- data.frame(lapply(without[c("accs","precs","recs","f1s")], prop_to_perc))
+without$preprocessing <- "none"
+
+aug <- as.data.frame(npyLoad('../Results/ALL_AUG_UNBIASED.npy'))
+colnames(aug) <- c("accs","losses","precs","recs","f1s")
+aug <- data.frame(lapply(aug[c("accs","precs","recs","f1s")], prop_to_perc))
+aug$preprocessing <- "aug"
+
 aug_vs_not <- rbind(without,aug)
 
 t.test(f1s ~ preprocessing, data=aug_vs_not) # p-value = 0.153
-wilcox.test(f1s ~ preprocessing, data=aug_vs_not) # p-value = 0.4359
+wilcox.test(f1s ~ preprocessing, data=aug_vs_not) # W = 0, p-value = 1.083e-05
 
 t.test(accs ~ preprocessing, data=aug_vs_not) # p-value = 0.05155
-wilcox.test(accs ~ preprocessing, data=aug_vs_not) # p-value = 0.03051 *
+wilcox.test(accs ~ preprocessing, data=aug_vs_not) # W = 38, p-value = 0.3845
 
-t.test(losses ~ preprocessing, data=aug_vs_not) # p-value = 0.04628 *
-wilcox.test(losses ~ preprocessing, data=aug_vs_not) # p-value = 0.315
-
-t.test(precs ~ preprocessing, data=aug_vs_not) # p-value = 0.1782
-wilcox.test(precs ~ preprocessing, data=aug_vs_not) # p-value = 0.153
+t.test(precs ~ preprocessing, data=aug_vs_not) # 
+wilcox.test(precs ~ preprocessing, data=aug_vs_not) # W = 4, p-value = 0.0001299
 
 t.test(recs ~ preprocessing, data=aug_vs_not) # p-value = 0.0004226 ***
-wilcox.test(recs ~ preprocessing, data=aug_vs_not) # p-value = 0.002765 **
+wilcox.test(recs ~ preprocessing, data=aug_vs_not) # W = 3, p-value = 0.0004353
 
 
 
@@ -293,3 +316,44 @@ wilcox.test(recs ~ preprocessing, data=aug_vs_not) # p-value = 0.002765 **
 #                 width=.2,                    # Width of the error bars
 #                 position=position_dodge(.9))
 # print(pre)
+
+# aug_biased <- as.data.frame(npyLoad('../Results/ALL_AUG.npy'))
+# colnames(aug_biased) <- c("accs","losses","precs","recs","f1s")
+# aug_biased <- data.frame(lapply(aug_biased[c("precs","recs","f1s")], prop_to_perc))
+# aug_biased <- stack(aug_biased)
+# aug_biased$preprocessing <- "aug_biased"
+# colnames(aug_biased)[2] <- "metric"
+
+
+### BIASED PLOT
+
+# # PLOTTING:
+# all_manipulations <- rbind(without,standard,denoised,denoised_standard,crop_aug,all_aug)
+# all_manipulations$manipulation <- as.factor(all_manipulations$manipulation)
+# all_manipulations
+# 
+# # summary stats for stats
+# summary_manipulations <- ddply(all_manipulations, c("metric", "preprocessing"), summarise,
+#                                N    = length(values),
+#                                mean = mean(values),
+#                                sd   = sd(values),
+#                                se   = sd / sqrt(N))
+# 
+# summary_manipulations$preprocessing <- factor(summary_manipulations$preprocessing, levels=c("none","standardised","denoised","denoised_standard","crop_aug","all_aug"))
+# 
+# ### PLOT
+# dev.off()
+# met <-ggplot(summary_manipulations, aes(y=mean, x=metric, color=preprocessing, fill=preprocessing)) +
+#   ggtitle("Effect of manipulating input data (preprocessing/augmenting) \non various measures of CNN performance") +
+#   ylab("mean (%)") +      
+#   geom_bar(position=position_dodge(), stat="identity") + 
+#   geom_hline(yintercept=50, linetype="dotted") + 
+#   geom_errorbar(aes(ymin=mean-se, ymax=mean+se),
+#                 color="black", 
+#                 width=.2,                    
+#                 position=position_dodge(.9))
+# 
+# # met <- met + annotate("text", x=3.365, y=99, label="**", size=6) 
+# 
+# ggsave('../Results/all_manipulations_biased.pdf')
+# print(met)

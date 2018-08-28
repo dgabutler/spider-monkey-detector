@@ -21,6 +21,7 @@ from   pydub import AudioSegment # used by: search_file_
 from   pydub.utils import make_chunks # used by: search_file_
 from   shutil import copyfile # used by: search_file_
 from   shutil import rmtree # used by: search_file_
+from   shutil import move # used by: compile_aug_test_dataset
 import glob # used by: search_file_, search_folder_, hard_negative_miner
 import subprocess # used by: search_file_
 import time # used by: search_folder_
@@ -151,18 +152,21 @@ def standardise_dataset(dataset):
 
     return dataset
 
-def compile_dataset(run_type, sr):
+def compile_dataset(run_type, sr, train_perc=0.9):
     """
     Data providing function.
     Run type argument specifies which set of data to load, 
     e.g. augmented, denoised.
     Current options are:
-    - 'without-preprocessing'
+    - 'without_preprocessing'
     - 'standardised'
     - 'denoised'
-    - 'denoised/standardised'
-    - 'crop_augmented'
-    - 'all-aug'
+    - 'denoised_standardised'
+    - 'crop_aug'
+    - 'crop_aug_stand'
+    - 'crop_aug_denoised'
+    - 'all_aug'
+    - 'all_aug_stand'
     Returns dataset for input into CNN training function
     """
     # build standard dataset:
@@ -197,23 +201,103 @@ def compile_dataset(run_type, sr):
         
         return dataset
 
-    def add_cropped_dataset(dataset, noise=False, noise_samples=False):
+    def process_aug_train_and_test():
+        # empty combined positives file if has contents 
+        map(os.unlink,(os.path.join('../Data/augmenting/unclipped-aug-train-pos',f) for f in os.listdir('../Data/augmenting/unclipped-aug-train-pos')))
+        from distutils.dir_util import copy_tree
+        # clip all unclipped to train originally
+        copy_tree("../Data/unclipped-whinnies-catappa", "../Data/augmenting/unclipped-aug-train-pos")
+        copy_tree("../Data/unclipped-whinnies-corcovado", "../Data/augmenting/unclipped-aug-train-pos")
+        copy_tree("../Data/unclipped-whinnies-osa", "../Data/augmenting/unclipped-aug-train-pos")
+        copy_tree("../Data/unclipped-whinnies-shady", "../Data/augmenting/unclipped-aug-train-pos")
+        all_pos = glob.glob('../Data/augmenting/unclipped-aug-train-pos/*.WAV')
+        # randomly allocate train/test
+        random.shuffle(all_pos)
+        num_train_examples = int(round(len(all_pos)*0.9))
+        aug_train = all_pos[:num_train_examples]
+        aug_test = all_pos[num_train_examples:]
+        # move raw test files
+        map(os.unlink,(os.path.join('../Data/augmenting/unclipped-aug-test-pos',f) for f in os.listdir('../Data/augmenting/unclipped-aug-test-pos')))
+        for f in aug_test:
+            f_name = os.path.basename(f)
+            move(f, "../Data/augmenting/unclipped-aug-test-pos/"+f_name)
+        # clip train, clip test (emptying first)
+        praat_files = sorted(os.listdir('../Data/praat-files'))
+        #
+        map(os.unlink,(os.path.join('../Data/augmenting/aug-train-pos',f) for f in os.listdir('../Data/augmenting/aug-train-pos')))
+        wavtools.clip_whinnies(praat_files,3000,'../Data/augmenting/unclipped-aug-train-pos','../Data/augmenting/aug-train-pos')
+        #
+        map(os.unlink,(os.path.join('../Data/augmenting/aug-test-pos',f) for f in os.listdir('../Data/augmenting/aug-test-pos')))
+        wavtools.clip_whinnies(praat_files,3000,'../Data/augmenting/unclipped-aug-test-pos','../Data/augmenting/aug-test-pos')
+        # AUG-TIMESHIFT
+        # training samples...
+        for f in aug_train:
+            fname = os.path.basename(os.path.splitext(f)[0])
+            try:
+                wavtools.augment_time_shift(fname,"../Data/augmenting/unclipped-aug-train-pos", 3000, 0.2, 2, destination_folder="../Data/augmenting/aug-train-pos")
+            except IOError: continue
+        # testing samples...
+        for f in aug_test:
+            fname = os.path.basename(os.path.splitext(f)[0])
+            try:
+                wavtools.augment_time_shift(fname,"../Data/augmenting/unclipped-aug-test-pos", 3000, 0.2, 2, destination_folder="../Data/augmenting/aug-test-pos")
+            except IOError: continue    
         
-        print "Adding basic dataset..."
-        dataset = add_basic_dataset(dataset,noise=False,noise_samples=False)
-        print "Adding augmented cropped data..."
-        print "...augmented positives"
-        dataset = add_n_files_to_dataset(n=-1, folder='aug-timeshifted', dataset=dataset, example_type=1, sr=sr)
-        print "...augmented negatives"
-        remainder = wavtools.num_examples(dataset,1) - wavtools.num_examples(dataset,0)
-        split = int(round(remainder/2.0))
-        dataset = add_n_files_to_dataset(n=split, folder='catappa-2-hnm', dataset=dataset, example_type=0, sr=sr)
-        dataset = add_n_files_to_dataset(n=remainder-split, folder='catappa-2-negatives', dataset=dataset, example_type=0, sr=sr)
+        pos_train = len(glob.glob("../Data/augmenting/aug-train-pos/*.WAV"))
+        
+        ########################## NEGATIVES
+        # ensure negs folder is empty
+        map(os.unlink,(os.path.join('../Data/augmenting/aug-train-neg',f) for f in os.listdir('../Data/augmenting/aug-train-neg')))
+        # add files, balanced with positives
+        cat_two_negs = glob.glob('../Data/catappa-2-negatives/*.WAV')
+        random.shuffle(cat_two_negs)
+        select = cat_two_negs[:101]
+        for f in select:
+            fname = fname = os.path.basename(f)
+            copyfile(f,'../Data/augmenting/aug-train-neg/'+'c'+fname)
+        #
+        cat_two_hnm = glob.glob('../Data/catappa-hnm/*.WAV')
+        random.shuffle(cat_two_hnm)
+        select = cat_two_hnm[:101]
+        for f in select:
+            fname = fname = os.path.basename(f)
+            copyfile(f,'../Data/augmenting/aug-train-neg/'+'h'+fname)
+        #
+        corc_but_must_be_osa = glob.glob('../Data/osa-1-negatives/*.WAV')
+        random.shuffle(corc_but_must_be_osa)
+        select = corc_but_must_be_osa[:32]
+        for f in select:
+            fname = fname = os.path.basename(f)
+            copyfile(f,'../Data/augmenting/aug-train-neg/'+'co'+fname)
+        #
+        osa = glob.glob('../Data/osa-1-negatives/*.WAV')
+        random.shuffle(osa)
+        select = osa[:24]
+        for f in select:
+            fname = fname = os.path.basename(f)
+            copyfile(f,'../Data/augmenting/aug-train-neg/'+'o'+fname) 
+        #
+        shady = glob.glob('../Data/catappa-hnm/*.WAV')
+        random.shuffle(shady)
+        select = shady[:114]
+        for f in select:
+            fname = fname = os.path.basename(f)
+            copyfile(f,'../Data/augmenting/aug-train-neg/'+'s'+fname) 
 
-        return dataset
+        # SPLIT THIS INTO TRAIN-TEST SPLIT
+        all_neg = glob.glob('../Data/augmenting/aug-train-neg/*.WAV')
+        # randomly allocate train/test
+        random.shuffle(all_neg)
+        num_train_examples = pos_train
+        aug_test_neg = all_neg[num_train_examples:]
+        # move raw test files
+        map(os.unlink,(os.path.join('../Data/augmenting/aug-test-neg',f) for f in os.listdir('../Data/augmenting/aug-test-neg')))
+        for f in aug_test_neg:
+            f_name = os.path.basename(f)
+            move(f, "../Data/augmenting/aug-test-neg/"+f_name)
 
     # run-type optional processing methods
-    if run_type == 'without-preprocessing':
+    if run_type == 'without_preprocessing':
         dataset = []
         dataset = add_basic_dataset(dataset,noise=False,noise_samples=False)
     elif run_type == 'standardised':
@@ -224,27 +308,202 @@ def compile_dataset(run_type, sr):
         dataset = []
         dataset = add_basic_dataset(dataset,noise=False,noise_samples=False)
         denoise_dataset(dataset)
-    elif run_type == 'denoised/standardised':
+    elif run_type == 'denoised_standardised':
         dataset = []
         dataset = add_basic_dataset(dataset,noise=False,noise_samples=False)
         standardise_dataset(dataset) 
         denoise_dataset(dataset)    
-    elif run_type == 'crop_augmented':
-        dataset = []
-        dataset = add_cropped_dataset(dataset,noise=False,noise_samples=False)
+    elif run_type == 'crop_aug':
+        print "\nSorting original data into seperate training and test portions (90/10 split)"
+        process_aug_train_and_test()
+        train_dataset = []
+        test_dataset = []
+        # positives: crop train and test, add uncropped and cropped 
+        print "\n...adding positive data, with two crop augmented versions of each file..."
+        train_dataset = add_n_files_to_dataset(n=-1, folder='augmenting/aug-train-pos', dataset=train_dataset, example_type=1, sr=sr, noise=False, noise_samples=False)
+        test_dataset = add_n_files_to_dataset(n=-1, folder='augmenting/aug-test-pos', dataset=test_dataset, example_type=1, sr=sr, noise=False, noise_samples=False)
+        # add manually balanced negatives
+        print "\n...adding proportionally balanced negative data..."
+        train_dataset = add_n_files_to_dataset(n=-1, folder='augmenting/aug-train-neg', dataset=train_dataset, example_type=0, sr=sr, noise=False, noise_samples=False)
+        test_dataset = add_n_files_to_dataset(n=-1, folder='augmenting/aug-test-neg', dataset=test_dataset, example_type=0, sr=sr, noise=False, noise_samples=False)
+        
+        # summarise datasets created
+        print "\nNumber of samples in train dataset: " + \
+        str(wavtools.num_examples(train_dataset,0)) + " negative, " + \
+        str(wavtools.num_examples(train_dataset,1)) + " positive"
+
+        print "\nNumber of samples in test dataset: " + \
+        str(wavtools.num_examples(test_dataset,0)) + " negative, " + \
+        str(wavtools.num_examples(test_dataset,1)) + " positive"
+
+        x_train, y_train = zip(*train_dataset)
+        x_test, y_test = zip(*test_dataset)
+        
+        return x_train, y_train, x_test, y_test          
+    elif run_type == 'crop_aug_stand':
+        print "\nSorting original data into seperate training and test portions (90/10 split)"
+        process_aug_train_and_test()
+        train_dataset = []
+        test_dataset = []
+        # positives: crop train and test, add uncropped and cropped 
+        print "\n...adding positive data, with two crop augmented versions of each file..."
+        train_dataset = add_n_files_to_dataset(n=-1, folder='augmenting/aug-train-pos', dataset=train_dataset, example_type=1, sr=sr, noise=False, noise_samples=False)
+        test_dataset = add_n_files_to_dataset(n=-1, folder='augmenting/aug-test-pos', dataset=test_dataset, example_type=1, sr=sr, noise=False, noise_samples=False)
+        # add manually balanced negatives
+        print "\n...adding proportionally balanced negative data..."
+        train_dataset = add_n_files_to_dataset(n=-1, folder='augmenting/aug-train-neg', dataset=train_dataset, example_type=0, sr=sr, noise=False, noise_samples=False)
+        test_dataset = add_n_files_to_dataset(n=-1, folder='augmenting/aug-test-neg', dataset=test_dataset, example_type=0, sr=sr, noise=False, noise_samples=False)
+        
+        # standardise datasets
+        print "\n...standardising train and test datasets..."
+        standardise_dataset(train_dataset)
+        standardise_dataset(test_dataset)
+
+        # summarise datasets created
+        print "\nNumber of samples in train dataset: " + \
+        str(wavtools.num_examples(train_dataset,0)) + " negative, " + \
+        str(wavtools.num_examples(train_dataset,1)) + " positive"
+
+        print "\nNumber of samples in test dataset: " + \
+        str(wavtools.num_examples(test_dataset,0)) + " negative, " + \
+        str(wavtools.num_examples(test_dataset,1)) + " positive"
+
+        x_train, y_train = zip(*train_dataset)
+        x_test, y_test = zip(*test_dataset)
+        
+        return x_train, y_train, x_test, y_test          
+    elif run_type == 'crop_aug_denoised':    
+        print "\nSorting original data into seperate training and test portions (90/10 split)"
+        process_aug_train_and_test()
+        train_dataset = []
+        test_dataset = []
+        # positives: crop train and test, add uncropped and cropped 
+        print "\n...adding positive data, with two crop augmented versions of each file..."
+        train_dataset = add_n_files_to_dataset(n=-1, folder='augmenting/aug-train-pos', dataset=train_dataset, example_type=1, sr=sr, noise=False, noise_samples=False)
+        test_dataset = add_n_files_to_dataset(n=-1, folder='augmenting/aug-test-pos', dataset=test_dataset, example_type=1, sr=sr, noise=False, noise_samples=False)
+        # add manually balanced negatives
+        print "\n...adding proportionally balanced negative data..."
+        train_dataset = add_n_files_to_dataset(n=-1, folder='augmenting/aug-train-neg', dataset=train_dataset, example_type=0, sr=sr, noise=False, noise_samples=False)
+        test_dataset = add_n_files_to_dataset(n=-1, folder='augmenting/aug-test-neg', dataset=test_dataset, example_type=0, sr=sr, noise=False, noise_samples=False)
+        
+        # denoise datasets
+        print "\n...denoising train and test datasets..."
+        denoise_dataset(train_dataset)
+        denoise_dataset(test_dataset)
+
+        # summarise datasets created
+        print "\nNumber of samples in train dataset: " + \
+        str(wavtools.num_examples(train_dataset,0)) + " negative, " + \
+        str(wavtools.num_examples(train_dataset,1)) + " positive"
+
+        print "\nNumber of samples in test dataset: " + \
+        str(wavtools.num_examples(test_dataset,0)) + " negative, " + \
+        str(wavtools.num_examples(test_dataset,1)) + " positive"
+
+        x_train, y_train = zip(*train_dataset)
+        x_test, y_test = zip(*test_dataset)
+        
+        return x_train, y_train, x_test, y_test 
     elif run_type == 'all_aug':
-        dataset = []
-        dataset = add_cropped_dataset(dataset,noise=False,noise_samples=False)
-        print "\nAdding noise augmented data..."
-        dataset = add_cropped_dataset(dataset,noise=True,noise_samples=False)
-        print "\nAdding noise sample augmented data..."
-        dataset = add_cropped_dataset(dataset,noise=False,noise_samples=True)
+        print "\nSorting original data into seperate training and test portions (90/10 split)"
+        process_aug_train_and_test()
+        train_dataset = []
+        test_dataset = []
+        # positives: crop train and test, add uncropped and cropped 
+        print "\n...adding positive data, with two crop augmented versions of each file..."
+        train_dataset = add_n_files_to_dataset(n=-1, folder='augmenting/aug-train-pos', dataset=train_dataset, example_type=1, sr=sr, noise=False, noise_samples=False)
+        test_dataset = add_n_files_to_dataset(n=-1, folder='augmenting/aug-test-pos', dataset=test_dataset, example_type=1, sr=sr, noise=False, noise_samples=False)
+        # add manually balanced negatives
+        print "\n...adding proportionally balanced negative data..."
+        train_dataset = add_n_files_to_dataset(n=-1, folder='augmenting/aug-train-neg', dataset=train_dataset, example_type=0, sr=sr, noise=False, noise_samples=False)
+        test_dataset = add_n_files_to_dataset(n=-1, folder='augmenting/aug-test-neg', dataset=test_dataset, example_type=0, sr=sr, noise=False, noise_samples=False)
+        # add noise samples positives and negatives
+        print "\n...adding noise augmented versions of positives and negatives..."
+        train_dataset = add_n_files_to_dataset(n=-1, folder='augmenting/aug-train-pos', dataset=train_dataset, example_type=1, sr=sr, noise=True, noise_samples=False)
+        test_dataset = add_n_files_to_dataset(n=-1, folder='augmenting/aug-test-pos', dataset=test_dataset, example_type=1, sr=sr, noise=True, noise_samples=False)
+        train_dataset = add_n_files_to_dataset(n=-1, folder='augmenting/aug-train-neg', dataset=train_dataset, example_type=0, sr=sr, noise=True, noise_samples=False)
+        test_dataset = add_n_files_to_dataset(n=-1, folder='augmenting/aug-test-neg', dataset=test_dataset, example_type=0, sr=sr, noise=True, noise_samples=False)
+         # add noise samples positives and negatives
+        print "\n...adding noise sample augmented versions of positives and negatives..."
+        train_dataset = add_n_files_to_dataset(n=-1, folder='augmenting/aug-train-pos', dataset=train_dataset, example_type=1, sr=sr, noise=False, noise_samples=True)
+        test_dataset = add_n_files_to_dataset(n=-1, folder='augmenting/aug-test-pos', dataset=test_dataset, example_type=1, sr=sr, noise=False, noise_samples=True)
+        train_dataset = add_n_files_to_dataset(n=-1, folder='augmenting/aug-train-neg', dataset=train_dataset, example_type=0, sr=sr, noise=False, noise_samples=True)
+        test_dataset = add_n_files_to_dataset(n=-1, folder='augmenting/aug-test-neg', dataset=test_dataset, example_type=0, sr=sr, noise=False, noise_samples=True)
+
+        print "\nNumber of samples in train dataset: " + \
+        str(wavtools.num_examples(train_dataset,0)) + " negative, " + \
+        str(wavtools.num_examples(train_dataset,1)) + " positive"
+
+        print "\nNumber of samples in test dataset: " + \
+        str(wavtools.num_examples(test_dataset,0)) + " negative, " + \
+        str(wavtools.num_examples(test_dataset,1)) + " positive"
+
+        x_train, y_train = zip(*train_dataset)
+        x_test, y_test = zip(*test_dataset)
+        
+        return x_train, y_train, x_test, y_test
+    elif run_type == 'all_aug_stand':
+        print "\nSorting original data into seperate training and test portions (90/10 split)"
+        process_aug_train_and_test()
+        train_dataset = []
+        test_dataset = []
+        # positives: crop train and test, add uncropped and cropped 
+        print "\n...adding positive data, with two crop augmented versions of each file..."
+        train_dataset = add_n_files_to_dataset(n=-1, folder='augmenting/aug-train-pos', dataset=train_dataset, example_type=1, sr=sr, noise=False, noise_samples=False)
+        test_dataset = add_n_files_to_dataset(n=-1, folder='augmenting/aug-test-pos', dataset=test_dataset, example_type=1, sr=sr, noise=False, noise_samples=False)
+        # add manually balanced negatives
+        print "\n...adding proportionally balance negative data..."
+        train_dataset = add_n_files_to_dataset(n=-1, folder='augmenting/aug-train-neg', dataset=train_dataset, example_type=0, sr=sr, noise=False, noise_samples=False)
+        test_dataset = add_n_files_to_dataset(n=-1, folder='augmenting/aug-test-neg', dataset=test_dataset, example_type=0, sr=sr, noise=False, noise_samples=False)
+        # add noise samples positives and negatives
+        print "\n...adding noise augmented versions of positives and negatives..."
+        train_dataset = add_n_files_to_dataset(n=-1, folder='augmenting/aug-train-pos', dataset=train_dataset, example_type=1, sr=sr, noise=True, noise_samples=False)
+        test_dataset = add_n_files_to_dataset(n=-1, folder='augmenting/aug-test-pos', dataset=test_dataset, example_type=1, sr=sr, noise=True, noise_samples=False)
+        train_dataset = add_n_files_to_dataset(n=-1, folder='augmenting/aug-train-neg', dataset=train_dataset, example_type=0, sr=sr, noise=True, noise_samples=False)
+        test_dataset = add_n_files_to_dataset(n=-1, folder='augmenting/aug-test-neg', dataset=test_dataset, example_type=0, sr=sr, noise=True, noise_samples=False)
+         # add noise samples positives and negatives
+        print "\n...adding noise sample augmented versions of positives and negatives..."
+        train_dataset = add_n_files_to_dataset(n=-1, folder='augmenting/aug-train-pos', dataset=train_dataset, example_type=1, sr=sr, noise=False, noise_samples=True)
+        test_dataset = add_n_files_to_dataset(n=-1, folder='augmenting/aug-test-pos', dataset=test_dataset, example_type=1, sr=sr, noise=False, noise_samples=True)
+        train_dataset = add_n_files_to_dataset(n=-1, folder='augmenting/aug-train-neg', dataset=train_dataset, example_type=0, sr=sr, noise=False, noise_samples=True)
+        test_dataset = add_n_files_to_dataset(n=-1, folder='augmenting/aug-test-neg', dataset=test_dataset, example_type=0, sr=sr, noise=False, noise_samples=True)
+        # standardising
+        print "\n...standardising training and test data..."
+        standardise_dataset(train_dataset)
+        standardise_dataset(test_dataset)
+
+        print "\nNumber of samples in train dataset: " + \
+        str(wavtools.num_examples(train_dataset,0)) + " negative, " + \
+        str(wavtools.num_examples(train_dataset,1)) + " positive"
+
+        print "\nNumber of samples in test dataset: " + \
+        str(wavtools.num_examples(test_dataset,0)) + " negative, " + \
+        str(wavtools.num_examples(test_dataset,1)) + " positive"
+
+        x_train, y_train = zip(*train_dataset)
+        x_test, y_test = zip(*test_dataset)
+        
+        return x_train, y_train, x_test, y_test 
+    else:
+        print "invalid run type provided"
+        return 
 
     print "\nNumber of samples in dataset: " + \
     str(wavtools.num_examples(dataset,0)) + " negative, " + \
     str(wavtools.num_examples(dataset,1)) + " positive"
 
-    return dataset
+    random.shuffle(dataset)
+
+    # use provided training percentage to give num. training samples
+    n_train_samples = int(round(len(dataset)*train_perc))
+    train = dataset[:n_train_samples]
+    # tests on remaining % of total
+    test = dataset[n_train_samples:]    
+
+    x_train, y_train = zip(*train)
+    x_test, y_test = zip(*test)
+    
+    return x_train, y_train, x_test, y_test
 
 # following metrics courtesy of Avcu, see https://github.com/keras-team/keras/issues/5400
 def check_units(y_true, y_pred):
@@ -281,86 +540,68 @@ def f1(y_true, y_pred):
     recall = recall(y_true, y_pred)
     return 2*((precision*recall)/(precision+recall+K.epsilon()))
 
-def model_train(dataset, name, train_perc, num_epochs, batch_size):
+def model_train(x_train, y_train, x_test, y_test, name, num_epochs, batch_size, batch_norm=False):
     """
     Trains and saves simple keras model. 
     """
-    try:
-        random.shuffle(dataset)
-    except NameError:
-        print 'non-existent dataset name provided. check dataset exists and retry'
-        return 
-
-    # use provided training percentage to give num. training samples
-    n_train_samples = int(round(len(dataset)*train_perc))
-    train = dataset[:n_train_samples]
-    # tests on remaining % of total
-    test = dataset[n_train_samples:]    
-
-    x_train, y_train = zip(*train)
-    x_test, y_test = zip(*test)
 
     # reshape for CNN input
     x_train = np.array([x.reshape( (128, 282, 1) ) for x in x_train])
     x_test = np.array([x.reshape( (128, 282, 1) ) for x in x_test])
 
-    # # one-hot encoding for classes
-    # y_train = np.array(keras.utils.to_categorical(y_train, 2))
-    # y_test = np.array(keras.utils.to_categorical(y_test, 2))
-
+    # labelling samples
     encoder = LabelEncoder()
     encoder.fit(y_train)
     encoder.fit(y_test)
     y_train = encoder.transform(y_train)
     y_test = encoder.transform(y_test)
 
+    # compiling network
     model = Sequential()
-    input_shape=(128, 282, 1)
+    input_shape=(128, 282, 1) # dimensions: freq. bins, time steps, depth of feature maps
 
     model.add(Conv2D(24, (5, 5), strides=(1, 1), input_shape=input_shape))
     model.add(MaxPooling2D((4, 2), strides=(4, 2)))
+    if batch_norm:
+        model.add(BatchNormalization())
     model.add(Activation('relu'))
-    model.add(BatchNormalization())
 
     model.add(Conv2D(48, (5, 5), padding="valid"))
     model.add(MaxPooling2D((4, 2), strides=(4, 2)))
-    model.add(Activation('elu'))
-    model.add(BatchNormalization())
+    if batch_norm:
+        model.add(BatchNormalization())
+    model.add(Activation('relu'))
 
     model.add(Conv2D(48, (5, 5), padding="valid"))
-    model.add(Activation('elu'))
+    if batch_norm:
+        model.add(BatchNormalization())
+    model.add(Activation('relu'))
 
     model.add(Flatten())
-    model.add(Dropout(rate=0.8364280725819752)) # from hyperas
+    model.add(Dropout(rate=0.5)) # from hyperas
 
-    model.add(Dense(128))
+    model.add(Dense(64))
     model.add(Activation('relu'))
-    model.add(Dropout(rate=0.9532739136720357)) # from hyperas
+    model.add(Dropout(rate=0.5)) # from hyperas
 
     model.add(Dense(1))
     model.add(Activation('sigmoid'))
 
     model.compile(
-        optimizer="sgd",
+        optimizer="Adam",
         loss="binary_crossentropy",
         metrics=['accuracy', precision, recall, f1]) 
 
-    history = model.fit( # was 'model.fit('
+    history = model.fit( 
         x=x_train, 
         y=y_train,
         epochs=num_epochs,
         batch_size=batch_size,
         validation_data= (x_test, y_test))
-        # callbacks=[metrics])
 
     score = model.evaluate(
         x=x_test,
         y=y_test)
-    
-    # y_pred = model.predict(x_test)
-
-    # list all data in history
-    # print history.history.keys() 
    
     # custom function to create plots of training behaviour
     def training_behaviour_plot(metric):
@@ -421,13 +662,9 @@ def model_train(dataset, name, train_perc, num_epochs, batch_size):
     # return auc roc value and save roc plot to results folder
     # auc_val = auc_roc_plot(X_test, y_test)
 
-    print('\nLearning rate:', str(K.eval(model.optimizer.lr)))
-    print('Test loss:', score[0])
-    print('Test accuracy:', score[1])
-    # print('AUC ROC:', auc_val)
-    # print('AUC pr:', history.history[auc_pr])
-
-    # metrics.get_data()
+    print '\nLearning rate:', str(K.eval(model.optimizer.lr))
+    print 'Test loss:', score[0]
+    print 'Test accuracy:', score[1] 
 
     # serialise model to JSON
     dataset_name = name
@@ -441,21 +678,46 @@ def model_train(dataset, name, train_perc, num_epochs, batch_size):
     model.save_weights(save_path+'e'+str(num_epochs)+'_b'+str(batch_size)+'_model.h5')
     print '\nsaved model '+dataset_name+'/'+'e'+str(num_epochs)+'_b'+str(batch_size)+' to disk' 
 
-# D_original = compile_dataset('without-preprocessing', 48000)
-# D_standard = compile_dataset('standardised', 48000)
-# D_denoised = compile_dataset('denoised/standardised', 48000)
-# D_crop_aug = compile_dataset('crop_augmented', 48000)
-# D_all_aug = compile_dataset('all_aug', 48000)
+    # report maximum metric values seen - allows for means/sds. to be calculated
+    max_f1 = np.max(history.history['val_f1'])
+    max_recall = np.max(history.history['val_recall'])
+    max_precision = np.max(history.history['val_precision'])
+    max_acc = np.max(history.history['val_acc'])
+    loss = history.history['val_loss'][-1]
 
-# dataset = D_all_aug
-# name = 'D_all_aug'
-# train_perc = 0.9
-# num_epochs = 50
-# batch_size = 32
+    return max_f1, max_recall, max_precision, max_acc, loss
 
-# model_train(dataset, name, train_perc, num_epochs, batch_size)
+# x_train, y_train, x_test, y_test = compile_dataset('without_preprocessing', 48000)
+# x_train, y_train, x_test, y_test = compile_dataset('standardised', 48000)
+# x_train, y_train, x_test, y_test = compile_dataset('denoised/standardised', 48000)
+# x_train, y_train, x_test, y_test = compile_dataset('crop_augmented', 48000)
+# x_train, y_train, x_test, y_test = compile_dataset('crop_augmented/denoised', 48000)
+# x_train, y_train, x_test, y_test = compile_dataset('crop_aug_stand', 48000)
+# x_train, y_train, x_test, y_test = compile_dataset('all_aug', 48000)
+# x_train, y_train, x_test, y_test = compile_dataset('all_aug_stand', 48000)
 
+name = 'D_crop_aug_stand'
+num_epochs = 40
+batch_size = 16
+batch_norm=False
 
+# max_f1, max_recall, max_precision, max_acc, loss = model_train(x_train, y_train, x_test, y_test, name, num_epochs, batch_size, batch_norm)
+
+f1_list, recall_list, precision_list, accuracy_list, loss_list = ([] for i in range(5))
+
+# loop for discovering performance of all augmentations (cannot be done using 10-fold cross. val)
+for i in range(10):
+    x_train, y_train, x_test, y_test = compile_dataset('crop_aug_stand', 48000)
+    max_f1, max_recall, max_precision, max_acc, loss = model_train(x_train, y_train, x_test, y_test, name, num_epochs, batch_size, batch_norm)
+    # append values:
+    f1_list.append(max_f1)
+    recall_list.append(max_recall)
+    precision_list.append(max_precision)
+    accuracy_list.append(max_acc)
+    loss_list.append(loss)
+
+# CROP_AUG_DENOISED = np.stack((accuracy_list, loss_list, precision_list, recall_list, f1_list),axis=1)
+# np.save('../Results/CROP_AUG_DENOISED.npy', CROP_AUG_DENOISED)
 
 def load_keras_model(dataset, model_name):
     """
@@ -492,7 +754,7 @@ def search_file_for_monkeys(file_name, threshold_confidence, wav_folder, model, 
     These clips are then able to be fed in as negative examples, to
     improve the discriminatory capability of the network 
 
-    Example call: search_file_for_monkeys('5A3AD7A6', 60, '/home/dgabutler/Work/CMEEProject/Data/unclipped-whinnies/shady-lane/')
+    Example call: search_file_for_monkeys('5A3AD7A6', 60, '/home/dgabutler/Work/CMEEProject/Data/whinnies/shady-lane/')
     """
     audio_folder = wav_folder
     # isolate folder name from path:

@@ -1,4 +1,5 @@
 # script runs 10-fold cross validation on classifier
+# NB - CANNOT BE USED ON AUGMENTED DATA
 
 # packages used
 import glob 
@@ -39,13 +40,7 @@ def data(run_type, train_perc, sr):
     if sr == 44100:
         time_dimension = 259
 
-    dataset = essential.compile_dataset(run_type, sr)
-    random.shuffle(dataset)
-    n_train_samples = int(round(len(dataset)*train_perc))
-    train = dataset[:n_train_samples]
-    test = dataset[n_train_samples:]    
-    x_train, y_train = zip(*train)
-    x_test, y_test = zip(*test)
+    x_train, y_train, x_test, y_test = essential.compile_dataset(run_type, sr)
 
     # reshape for CNN input
     x_train = np.array([x.reshape((128, time_dimension, 1)) for x in x_train])
@@ -119,11 +114,11 @@ def compile_model():
     model.add(Activation('relu'))
 
     model.add(Flatten())
-    model.add(Dropout(rate=0.6152916582980337)) # from hyperas
+    model.add(Dropout(rate=0.5)) # from hyperas
 
     model.add(Dense(64))
     model.add(Activation('relu'))
-    model.add(Dropout(rate=0.23855852860918042)) # from hyperas
+    model.add(Dropout(rate=0.5)) # from hyperas
 
     model.add(Dense(1))
     model.add(Activation('sigmoid'))
@@ -154,14 +149,21 @@ def kfoldcrossval(X, Y, sr, num_epochs):
             """
             max_index, max_value = max(enumerate(train_history.history[metric]), key=operator.itemgetter(1))
             return [max_value, max_index] 
+        
+        # BELOW APPROACH CHANGED, max. should really be median
         # append maximum metric score and epoch at which it was recorded
-        acc_list.append(metric_max('val_acc'))
-        precision_list.append((metric_max('val_precision')))
-        recall_list.append(metric_max('val_recall'))
-        f1_list.append((metric_max('val_f1')))
+        # acc_list.append(metric_max('val_acc'))
+        # precision_list.append((metric_max('val_precision')))
+        # recall_list.append(metric_max('val_recall'))
+        # f1_list.append((metric_max('val_f1')))
+
+        # MEDIAN - more representative
+        acc_list.append(np.median(train_history.history['val_acc']))
+        precision_list.append(np.median(train_history.history['val_precision']))
+        precision_list.append(np.median(train_history.history['val_precision']))
+        f1_list.append(np.median(train_history.history['val_f1']))
         # for loss metric, append loss value at last training epoch
         loss_list.append(train_history.history['val_loss'][-1])
-        # print("%s: %.2f%%" % (model.metrics_names[1], scores[1]*100))
 
     print("\nVal Accuracy: %.2f%% (+/- %.2f%%)" % (np.mean([item[0] for item in acc_list])*100, np.std([item[0] for item in acc_list])*100))
     print("Val Loss: %.2f (+/- %.2f)" % (np.mean(loss_list), np.std(loss_list)))
@@ -197,16 +199,16 @@ def sample_n_positives(n, X, Y):
 # (3) preprocessing:
 print "kfold WITHOUT"
 X, Y = data('without-preprocessing', 0.8, 48000)
-# without_acc_list, without_loss_list, without_precision_list, without_recall_list, without_f1_list = kfoldcrossval(X, Y, sr=48000, num_epochs=40)
+without_acc_list, without_loss_list, without_precision_list, without_recall_list, without_f1_list = kfoldcrossval(X, Y, sr=48000, num_epochs=40)
 print "kfold DENOISED"
 X, Y = data('denoised', 0.8, 48000)
-# denoised_acc_list, denoised_loss_list, denoised_precision_list, denoised_recall_list, denoised_f1_list = kfoldcrossval(X, Y, sr=48000, num_epochs=40)
+denoised_acc_list, denoised_loss_list, denoised_precision_list, denoised_recall_list, denoised_f1_list = kfoldcrossval(X, Y, sr=48000, num_epochs=40)
 print "kfold STANDARDISED"
 X, Y = data('standardised', 0.8, 48000)
-# stand_acc_list, stand_loss_list, stand_precision_list, stand_recall_list, stand_f1_list = kfoldcrossval(X, Y, sr=48000, num_epochs=40)
+stand_acc_list, stand_loss_list, stand_precision_list, stand_recall_list, stand_f1_list = kfoldcrossval(X, Y, sr=48000, num_epochs=40)
 print "kfold DENOISED/STANDARDISED"
 X, Y = data('denoised/standardised', 0.8, 48000)
-# denoised_stand_acc_list, denoised_stand_loss_list, denoised_stand_precision_list, denoised_stand_recall_list, denoised_stand_f1_list = kfoldcrossval(X, Y, sr=48000, num_epochs=40)
+denoised_stand_acc_list, denoised_stand_loss_list, denoised_stand_precision_list, denoised_stand_recall_list, denoised_stand_f1_list = kfoldcrossval(X, Y, sr=48000, num_epochs=40)
 
 # (2) increasing sample size:
 # lists to save results
