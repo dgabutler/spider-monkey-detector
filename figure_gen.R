@@ -25,9 +25,10 @@ sample_sizes_f1
 dev.off()
 size_plot_f1 <- ggplot(sample_sizes_f1, aes(x=size, y=mean_f1)) +
     geom_point(shape=1) +    # Use hollow circles
-    ylim(40,100) +           # Set Y-axis limits
-    ggtitle("Effect of increasing positive sample size on F1 score") +
+    ylim(60,73) +           # Set Y-axis limits
     xlab("Number of positives in training set") +           # Set X-axis limits
+    ggtitle("Effect of increasing positive sample size on F1 score") +
+#    theme(plot.title = element_text(hjust = 0.5)) +
     ylab("Mean F1 score (%)") +           # Set X-axis limits
     geom_smooth(method=lm,   # Add linear regression line
                 se=FALSE) +  # Don't add shaded confidence region
@@ -35,6 +36,7 @@ size_plot_f1 <- ggplot(sample_sizes_f1, aes(x=size, y=mean_f1)) +
                 position=position_dodge(.9))
 
 print(size_plot_f1)
+ggsave('../Results/learningcurve_f1.pdf')
 
 dev.off()
 size_plot_recall <- ggplot(sample_sizes_recall, aes(x=size, y=mean_recall)) +
@@ -103,40 +105,80 @@ crop_aug_denoised <- data.frame(lapply(crop_aug_denoised[c("precs","recs","f1s")
 crop_aug_denoised <- stack(crop_aug_denoised)
 crop_aug_denoised$manipulation <- "crop_aug_denoised"
 colnames(crop_aug_denoised)[2] <- "metric"
-
+#
+crop_aug_stand <- as.data.frame(npyLoad('../Results/CROP_AUG_STAND.npy'))
+colnames(crop_aug_stand) <- c("accs","losses","precs","recs","f1s")
+crop_aug_stand <- data.frame(lapply(crop_aug_stand[c("precs","recs","f1s")], prop_to_perc))
+crop_aug_stand <- stack(crop_aug_stand)
+crop_aug_stand$manipulation <- "crop_aug_stand"
+colnames(crop_aug_stand)[2] <- "metric"
 
 #### COMPARISON OF MANIPULATIONS 
 
 # PLOTTING:
-valid_manipulations <- rbind(crop_aug_denoised,crop_aug,all_aug)
-valid_manipulations$manipulation <- as.factor(valid_manipulations$manipulation)
-valid_manipulations
+aug_manipulations <- rbind(without,crop_aug_stand,crop_aug_denoised,crop_aug,all_aug)
+aug_manipulations$manipulation <- as.factor(aug_manipulations$manipulation)
+aug_manipulations
 
-# summary stats for stats
-summary_manipulations <- ddply(valid_manipulations, c("metric", "manipulation"), summarise,
+# summary stats:
+# aug_manipulations
+summary_aug <- ddply(aug_manipulations, c("metric", "manipulation"), summarise,
                                N    = length(values),
                                mean = mean(values),
                                sd   = sd(values),
                                se   = sd / sqrt(N))
 
-summary_manipulations$manipulation <- factor(summary_manipulations$manipulation, levels=c("crop_aug_denoised","crop_aug","all_aug"))
+summary_aug$manipulation <- factor(summary_aug$manipulation, levels=c("none","crop_aug_stand","crop_aug_denoised","crop_aug","all_aug"))
 
 ### PLOT
 dev.off()
-val <-ggplot(summary_manipulations, aes(y=mean, x=metric, color=manipulation, fill=manipulation)) +
-  ggtitle("Effect of manipulating input data (preprocessing/augmenting) \non various measures of CNN performance") +
-  ylab("mean (%)") +      
+aug <-ggplot(summary_aug, aes(y=mean, x=metric, color=manipulation, fill=manipulation)) +
+  ggtitle("Effect of different manipulations (data augmentation and preprocessing) on \nmaximum performance of CNN") +
+  ylab("Mean Value (%)") +  
+  xlab("Metric") +  
   geom_bar(position=position_dodge(), stat="identity") + 
   geom_hline(yintercept=50, linetype="dotted") + 
+  scale_x_discrete(labels = c('F1','Precision','Recall')) +
   geom_errorbar(aes(ymin=mean-se, ymax=mean+se),
                 color="black", 
                 width=.2,                    
                 position=position_dodge(.9))
 
-# met <- met + annotate("text", x=3.365, y=99, label="**", size=6) 
+aug + coord_cartesian(ylim=c(40,90))
+ggsave('../Results/aug_manipulations.pdf')
 
-ggsave('../Results/valid_manipulations.pdf')
-print(val)
+
+
+# PLOTTING:
+non_manipulations <- rbind(without,standard,denoised,denoised_standard)
+non_manipulations$manipulation <- as.factor(non_manipulations$manipulation)
+non_manipulations
+# summary stats:
+# aug_manipulations
+summary_non <- ddply(non_manipulations, c("metric", "manipulation"), summarise,
+                     N    = length(values),
+                     mean = mean(values),
+                     sd   = sd(values),
+                     se   = sd / sqrt(N))
+
+summary_non$manipulation <- factor(summary_non$manipulation, levels=c("none","standardised","denoised","denoised_standard"))
+
+### PLOT
+dev.off()
+non <-ggplot(summary_non, aes(y=mean, x=metric, color=manipulation, fill=manipulation)) +
+  ggtitle("Effect of different preprocessing techniques on \nmaximum performance of CNN, using original small dataset") +  ylab("Mean Value (%)") +  
+  xlab("Metric") +  
+  geom_bar(position=position_dodge(), stat="identity") + 
+  geom_hline(yintercept=50, linetype="dotted") + 
+  scale_x_discrete(labels = c('F1','Precision','Recall')) +
+  geom_errorbar(aes(ymin=mean-se, ymax=mean+se),
+                color="black", 
+                width=.2,                    
+                position=position_dodge(.9))
+
+non + coord_cartesian(ylim=c(40,90))
+ggsave('../Results/non_manipulations.pdf')
+
 
 # each technique compared to baseline of no method used:
 

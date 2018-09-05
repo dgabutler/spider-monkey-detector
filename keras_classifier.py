@@ -1184,23 +1184,23 @@ def view_mag_and_mel(mag_spec, mel_spec):
 # search_file_for_monkeys_ONE_NODE_OUTPUT('00000C6D', 60, '/home/dgabutler/Work/CMEEProject/Data/unclipped-whinnies/shady-lane/',loaded_model)
 # search_folder_for_monkeys('/home/dgabutler/Work/CMEEProject/Data/unclipped-whinnies/', 70, model=loaded_model, sr=44100)
 
-## AVERAGE CALL LENGTH OF ALL CALLS RECORDED
+# AVERAGE CALL LENGTH OF ALL CALLS RECORDED
 
-# call_durations = []
+call_durations = []
 
-# for wav in praat_files:
-#     try:
-# 	    start_times = wavtools.whinny_starttimes_from_praatfile('../Data/praat-files/'+wav)[1]
-#     except FileNotFoundError:
-#         print("Unable to process file:", wav)
-#         continue
-#     end_times = wavtools.whinny_endtimes_from_praatfile('../Data/praat-files/'+wav)[1]
+for wav in praat_files:
+    try:
+	    start_times = wavtools.whinny_starttimes_from_praatfile('../Data/praat-files/'+wav)[1]
+    except FileNotFoundError:
+        print("Unable to process file:", wav)
+        continue
+    end_times = wavtools.whinny_endtimes_from_praatfile('../Data/praat-files/'+wav)[1]
 
-#     call_durations.extend([ends-starts for starts,ends in zip(start_times, end_times)])
+    call_durations.extend([ends-starts for starts,ends in zip(start_times, end_times)])
 
-# avg_call_len = sum(call_durations) / float(len(call_durations))
-# longest_call = np.max(call_durations)
-# shortest_call = np.min(call_durations)
+avg_call_len = sum(call_durations) / float(len(call_durations))
+longest_call = np.max(call_durations)
+shortest_call = np.min(call_durations)
 
 #################################################################
 # MORE COMPLEX CONVNET WITH SPECIFIC IMPORT STATEMENTS

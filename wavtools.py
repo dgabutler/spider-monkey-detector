@@ -1,10 +1,8 @@
-# Functions and scripts for processing .wav files and praat files
-# includes: - clipping 60 second files into short sections containing calls
-#           - obtaining time of recording from file name 
+# Functions for general processing of .wav files 
+# e.g. clipping using label files, preprocessing (denoising/normalizing)
+# augmenting, and adding to datasets for training of CNNs 
 
-# date: 21.07.18
-
-# NB. no relative paths in script
+# NB. few relative paths in script
 
 from    datetime import datetime # used by filename_to_localdatetime
 from    pytz import timezone # used by filename_to_localdatetime
@@ -19,7 +17,7 @@ import  random # used by: aug_time_shift, aug_file_blend
 import  glob # used by: aug_file_blend       
 import  librosa
 import  librosa.display   
-from    sklearn.utils import shuffle
+from    sklearn.utils import shuffle # used by do_augmentation
 import  python_speech_features as psf # used by load_mag_spec
 
 
@@ -88,7 +86,7 @@ def whinny_starttimes_from_praatfile(praat_file):
     wav_name = os.path.basename(os.path.splitext(praat_file)[0])
 
     for idx, line in enumerate(praat_contents): 
-        if "_Whinny" in line and "intervals" in praat_contents[idx+1]:
+        if "Whinny" in line and "intervals" in praat_contents[idx+1]:
             time_line = praat_contents[idx-2]
             start_times.extend(re.findall("(?<=xmin\s=\s)(\d+\.?\d*)(?=\s)", time_line))
 
@@ -117,7 +115,7 @@ def whinny_endtimes_from_praatfile(praat_file):
     wav_name = os.path.basename(os.path.splitext(praat_file)[0])
 
     for idx, line in enumerate(praat_contents): 
-        if "_Whinny" in line and "intervals" in praat_contents[idx+1]:
+        if "Whinny" in line and "intervals" in praat_contents[idx+1]:
             time_line = praat_contents[idx-1]
             end_times.extend(re.findall("\d+\.\d+", time_line))
     
@@ -183,28 +181,29 @@ def non_endtimes_from_praatfile(praat_file):
     
     return wav_name, end_times
 
-def clip_whinnies(praat_files, desired_duration):
+def clip_whinnies(praat_files, desired_duration, unclipped_folder_location, clipped_folder_location):
     """
     Clip all whinnies from wav files, following labels in praat files, to specified length.
 
-    praat_files = sorted(os.listdir('/home/dgabutler/Work/CMEEProject/Data/praat-files'))
+    praat_files = sorted(os.listdir('../Data/praat-files'))
+
+    unclipped_folder_location example: '../Data/unclipped-whinnies'
+    clipped_folder_location example: '../Data/clipped-whinnies-osa'
 
     """
-    unclipped_folder = '/home/dgabutler/Work/CMEEProject/Data/unclipped-whinnies'
-    clipped_folder_whinnies = '/home/dgabutler/Work/CMEEProject/Data/clipped-whinnies'
 
     for file in praat_files:
 
-        start_times = whinny_starttimes_from_praatfile('/home/dgabutler/Work/CMEEProject/Data/praat-files/'+file)
-        end_times = whinny_endtimes_from_praatfile('/home/dgabutler/Work/CMEEProject/Data/praat-files/'+file)
+        start_times = whinny_starttimes_from_praatfile('../Data/praat-files/'+file)
+        end_times = whinny_endtimes_from_praatfile('../Data/praat-files/'+file)
         wav_name = end_times[0]
 
         # following try-except accounts for praat files missing corresponding
         # audio files
         try:
-            wavfile = AudioSegment.from_wav(unclipped_folder + '/' + wav_name + '.WAV')
+            wavfile = AudioSegment.from_wav(unclipped_folder_location + '/' + wav_name + '.WAV')
         except IOError:
-            print("error: no wav file named " + wav_name + ".WAV at path " + unclipped_folder)
+            # print("error: no wav file named " + wav_name + ".WAV at path " + unclipped_folder_location)
             continue
 
         # desired_duration = 3000 # in milliseconds
@@ -221,7 +220,7 @@ def clip_whinnies(praat_files, desired_duration):
                                                     # of file 
             
             # Save clipped file to separate folder
-            clip.export(clipped_folder_whinnies+'/'+wav_name+'_'+str(idx+1)+'.WAV', format="wav")
+            clip.export(clipped_folder_location+'/'+wav_name+'_'+str(idx+1)+'.WAV', format="wav")
 
 def clip_noncall_sections(praat_files):
     """
@@ -272,6 +271,8 @@ def generate_negative_examples(noncall_files, desired_length):
 def load_mag_spec(path, sr, winlen=0.025, winstep=0.01, NFFT=2048, denoise=True, normalize=True):
     """
     From https://stackoverflow.com/questions/42330830/how-should-audio-be-pre-processed-for-classification
+    Change: winstep to alter num. timesteps, 
+            NFFT to alter num. frequency bins
     """
     #open wav file
     (sig,rate) = librosa.load(path, sr=sr, duration=3.00)
@@ -291,9 +292,6 @@ def load_mag_spec(path, sr, winlen=0.025, winstep=0.01, NFFT=2048, denoise=True,
     if normalize:
         magspec -= magspec.min(axis=0)
         magspec /= magspec.max(axis=0)
-
-    #show spec dimensions
-    print(magspec.shape)    
 
     return magspec
 
@@ -317,7 +315,7 @@ def add_files_to_dataset(folder, dataset, example_type, sr):
             return("error: sampling rate must be 48000 or 44100") 
         dataset.append((ps, example_type))
 
-def custom_add_files_to_dataset(folder, dataset, example_type, sr, augment=True):
+def custom_add_files_to_dataset(folder, dataset, example_type, sr, denoise=False, normalize=False, augment=False):
     """
     Takes all wav files from given folder name (minus slashes on 
     either side) and adds to the dataset name provided.
@@ -325,21 +323,26 @@ def custom_add_files_to_dataset(folder, dataset, example_type, sr, augment=True)
     sr (sampling rate) must be 44100 or 48000. 
     """
     data_folder_path = '/home/dgabutler/Work/CMEEProject/Data/'
+    append_index = len(dataset)
     files = glob.glob(data_folder_path+folder+'/*.WAV')
+    appended_region = np.zeros((len(files),2), dtype=object)
     for wav in files:
-        mag_spec = load_mag_spec(wav, sr)
+        mag_spec = load_mag_spec(wav, sr, denoise=denoise, normalize=normalize)
         if augment:
             mel_spec = do_augmentation(mag_spec, sr, noise=True, noise_samples=True, roll=True)
         else: 
             mel_spec = librosa.feature.melspectrogram(S=mag_spec, sr=sr)
         if mel_spec.shape != (128, 299): continue
 
-        dataset.append((mel_spec, example_type))
+        dataset[append_index] = [mel_spec, example_type]
+        append_index += 1
 
 def denoise(spec_noisy):
     """
     Subtract mean from each frequency band
     Modified from Mac Aodha et al. 2017
+    NB! load_mag_spec also has denoising element, 
+    from Stefan Kahl on answer to stack overflow Q
     """
     me = np.mean(spec_noisy, 1)
     spec_denoise = spec_noisy - me[:, np.newaxis]
@@ -368,6 +371,8 @@ def standardise_inputs(dataset):
     """uses standardisation method from 
     https://stackoverflow.com/questions/1735025/how-to-normalize-a-numpy-array-to-within-a-certain-range
     , applies to all spects in dataset
+    NB! load_mag_spec also has normalizing element,
+    taken from answer to stack overflow Q by Stefan Kahl
     """
     for row in dataset:
         row = list(row)
@@ -376,6 +381,9 @@ def standardise_inputs(dataset):
     return dataset
 
 # not useful
+
+# clipping whinnies --
+praat_files = sorted(os.listdir('../Data/praat-files'))
 
 def other_starttimes_from_praatfile(praat_file):
     """
@@ -434,7 +442,7 @@ def other_endtimes_from_praatfile(praat_file):
 
 # useful:
 
-def augment_time_shift(file_name, desired_duration, min_overlap, num_augmentations_per_clip):
+def augment_time_shift(file_name, folder, desired_duration, min_overlap, num_augmentations_per_clip, destination_folder='aug-timeshifted'):
     """
     For a given file name (without extension), creates clips in which
     monkey call is present for at least a minimum of 'min_overlap'
@@ -450,10 +458,10 @@ def augment_time_shift(file_name, desired_duration, min_overlap, num_augmentatio
     # following try-except accounts for praat files missing corresponding
     # audio files
     try:
-        wav = AudioSegment.from_wav('/home/dgabutler/Work/CMEEProject/Data/unclipped-whinnies/'+file_name+'.WAV')
+        wav = AudioSegment.from_wav('/home/dgabutler/Work/CMEEProject/Data/'+folder+'/'+file_name+'.WAV')
 
     except IOError:
-        print('error: no wav file named',file_name,'.WAV at path /home/dgabutler/Work/CMEEProject/Data/unclipped-whinnies/')
+        print 'warning: no wav file named ' +file_name+ '.WAV in folder ' + folder
         return
 
     call_durations = [a - b for a, b in zip(end_times,start_times)]
@@ -480,24 +488,27 @@ def augment_time_shift(file_name, desired_duration, min_overlap, num_augmentatio
 
             ### clip wav file at those random points and save
             clip = wav[clip_start:clip_end] 
-            clip.export('/home/dgabutler/Work/CMEEProject/Data/aug-timeshifted/'+file_name+'_'+str(idx+1)+'_'+str(i+1)+'.WAV', format="wav")
+            clip.export('/home/dgabutler/Work/CMEEProject/Data/'+destination_folder+'/'+file_name+'_'+str(idx+1)+'_'+str(i+1)+'.WAV', format="wav")
             
             ### iterative counter in while loop
             i+=1    
 
-def augment_folder_time_shift(min_overlap, num_augmentations_per_clip):
+def augment_folder_time_shift(folder, min_overlap, num_augmentations_per_clip, destination_folder='aug-timeshifted'):
     """
     Applies time shift augment to all clipped positives.
     Clips augmented for average specified number of times e.g. 3 will on average produce 3, but sometimes 2, 4, 0 etc., introducing element of randomness.
 
     Clipped positives from /Data/praat-files 
+
+    'min_overlap' percentage: '0.05' would ensure that at least 5% of call
+    is present, either at the beginning or the end.
     """
     praat_files = sorted(os.listdir('/home/dgabutler/Work/CMEEProject/Data/praat-files'))
     file_names = [os.path.splitext(x)[0] for x in praat_files]
     for file in file_names:
-        augment_time_shift(file, 3000, min_overlap, num_augmentations_per_clip)
+        augment_time_shift(file, folder, 3000, min_overlap, num_augmentations_per_clip, destination_folder)
 
-def do_augmentation(mag_spec, sr, noise=True, noise_samples=True, roll=True):
+def do_augmentation(mag_spec, sr, roll=True, noise=True, noise_samples=True):
     """
     Fundamentally similar to augmentation function in git repo
     of Kahl et al. 2017
@@ -510,10 +521,22 @@ def do_augmentation(mag_spec, sr, noise=True, noise_samples=True, roll=True):
     birds, 
     and return mel-frequency spectrogram 
     """
+    # alter prob. of augmentation depending on combination chosen
+    if roll and not noise and not noise_samples:
+        roll_prob = 1.0
+    elif noise and not noise_samples and not roll:
+        noise_prob = 1.0
+    elif noise_samples and not noise and not roll:
+        noise_samples_prob = 1.0
+    else:
+        roll_prob = 0.5
+        noise_prob = 0.5
+        noise_samples_prob = 0.2
+    
     AUG = {#'type':[probability, value]
-        'roll':[0.5, (0.0, 0.05)], 
-        'noise':[0.1, 0.01],
-        'noise_samples':[0.1, 1.0],
+        'roll':[roll_prob, (0.0, 0.05)], # prob. was 0.5
+        'noise':[noise_prob, 0.01], # prob. was 0.1
+        'noise_samples':[noise_samples_prob, 1.0], # prob. was 0.1
         }
 
     RANDOM = np.random.RandomState(100)

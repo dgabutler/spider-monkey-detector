@@ -620,11 +620,11 @@ def model_train(x_train, y_train, x_test, y_test, name, num_epochs, batch_size, 
         # remove plot if already exists, to allow to be overwritten:
         if os.path.isfile(file_name):
             os.remove(file_name)
-        plt.plot(history.history[metric])
-        plt.plot(history.history['val_' + metric])
-        plt.title("Change in metric '"+metric+ "' over total training time")
-        plt.ylabel(metric)
-        plt.xlabel('epoch')
+        plt.plot([i * 100 for i in (history.history[metric])])
+        plt.plot([i * 100 for i in (history.history['val_' + metric])])
+        plt.title("Change in accuracy over total training time - augmented dataset")
+        plt.ylabel("Accuracy (%)")
+        plt.xlabel('Epoch')
         plt.legend(['train', 'test'], loc='upper left')
         plt.savefig(file_name)
         plt.gcf().clear()
@@ -687,7 +687,7 @@ def model_train(x_train, y_train, x_test, y_test, name, num_epochs, batch_size, 
 
     return max_f1, max_recall, max_precision, max_acc, loss
 
-# x_train, y_train, x_test, y_test = compile_dataset('without_preprocessing', 48000)
+x_train, y_train, x_test, y_test = compile_dataset('all_aug', 48000)
 # x_train, y_train, x_test, y_test = compile_dataset('standardised', 48000)
 # x_train, y_train, x_test, y_test = compile_dataset('denoised/standardised', 48000)
 # x_train, y_train, x_test, y_test = compile_dataset('crop_augmented', 48000)
@@ -696,28 +696,28 @@ def model_train(x_train, y_train, x_test, y_test, name, num_epochs, batch_size, 
 # x_train, y_train, x_test, y_test = compile_dataset('all_aug', 48000)
 # x_train, y_train, x_test, y_test = compile_dataset('all_aug_stand', 48000)
 
-name = 'D_crop_aug_stand'
+name = 'D_all_aug'
 num_epochs = 40
 batch_size = 16
 batch_norm=False
 
-# max_f1, max_recall, max_precision, max_acc, loss = model_train(x_train, y_train, x_test, y_test, name, num_epochs, batch_size, batch_norm)
+max_f1, max_recall, max_precision, max_acc, loss = model_train(x_train, y_train, x_test, y_test, name, num_epochs, batch_size, batch_norm)
 
-f1_list, recall_list, precision_list, accuracy_list, loss_list = ([] for i in range(5))
+# f1_list, recall_list, precision_list, accuracy_list, loss_list = ([] for i in range(5))
 
 # loop for discovering performance of all augmentations (cannot be done using 10-fold cross. val)
-for i in range(10):
-    x_train, y_train, x_test, y_test = compile_dataset('crop_aug_stand', 48000)
-    max_f1, max_recall, max_precision, max_acc, loss = model_train(x_train, y_train, x_test, y_test, name, num_epochs, batch_size, batch_norm)
-    # append values:
-    f1_list.append(max_f1)
-    recall_list.append(max_recall)
-    precision_list.append(max_precision)
-    accuracy_list.append(max_acc)
-    loss_list.append(loss)
+# for i in range(10):
+#     x_train, y_train, x_test, y_test = compile_dataset('crop_aug_stand', 48000)
+#     max_f1, max_recall, max_precision, max_acc, loss = model_train(x_train, y_train, x_test, y_test, name, num_epochs, batch_size, batch_norm)
+#     # append values:
+#     f1_list.append(max_f1)
+#     recall_list.append(max_recall)
+#     precision_list.append(max_precision)
+#     accuracy_list.append(max_acc)
+#     loss_list.append(loss)
 
-# CROP_AUG_DENOISED = np.stack((accuracy_list, loss_list, precision_list, recall_list, f1_list),axis=1)
-# np.save('../Results/CROP_AUG_DENOISED.npy', CROP_AUG_DENOISED)
+# CROP_AUG_STAND = np.stack((accuracy_list, loss_list, precision_list, recall_list, f1_list),axis=1)
+# np.save('../Results/CROP_AUG_STAND.npy', CROP_AUG_STAND)
 
 def load_keras_model(dataset, model_name):
     """

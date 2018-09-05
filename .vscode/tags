@@ -1,0 +1,242 @@
+!_TAG_FILE_FORMAT	2	/extended format; --format=1 will not append ;" to lines/
+!_TAG_FILE_SORTED	1	/0=unsorted, 1=sorted, 2=foldcase/
+!_TAG_PROGRAM_AUTHOR	Darren Hiebert	/dhiebert@users.sourceforge.net/
+!_TAG_PROGRAM_NAME	Exuberant Ctags	//
+!_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
+!_TAG_PROGRAM_VERSION	5.9~svn20110310	//
+D	../spect.py	/^D = librosa.stft(y)$/;"	kind:variable	line:6
+D_S_mined_aug_t_denoised	../main.py	/^D_S_mined_aug_t_denoised = D_aug_t$/;"	kind:variable	line:133
+D_aug_t	../main.py	/^D_aug_t = D_original $/;"	kind:variable	line:99
+D_aug_t_denoised	../main.py	/^D_aug_t_denoised = wavtools.denoise_dataset(D_aug_t)$/;"	kind:variable	line:117
+D_aug_tb	../main.py	/^D_aug_tb = D_aug_t$/;"	kind:variable	line:108
+D_aug_tb_denoised	../main.py	/^D_aug_tb_denoised = wavtools.denoise_dataset(D_aug_tb)$/;"	kind:variable	line:118
+D_denoised	../main.py	/^D_denoised = wavtools.denoise_dataset(D_original)$/;"	kind:variable	line:95
+D_mined_aug_tb	../main.py	/^D_mined_aug_tb = D_aug_tb $/;"	kind:variable	line:123
+D_mined_aug_tb_denoised	../main.py	/^D_mined_aug_tb_denoised = wavtools.denoise_dataset(D_mined_aug_tb)$/;"	kind:variable	line:129
+D_original	../main.py	/^D_original = [] $/;"	kind:variable	line:73
+IM_AUGMENTATION	../misc/kahl_code_exploration.py	/^IM_AUGMENTATION = {#'type':[probability, value]$/;"	kind:variable	line:177
+__author__	../misc/lasagne_test.py	/^__author__ = "Duncan Butler"$/;"	kind:variable	line:3
+__date__	../misc/lasagne_test.py	/^__date__ = "18.04.18"$/;"	kind:variable	line:4
+add_files_to_dataset	../wavtools.py	/^def add_files_to_dataset(folder, dataset, example_type, sr):$/;"	kind:function	line:297
+algo	../optimising_keras.py	/^                                        algo=tpe.suggest,$/;"	kind:variable	line:179
+as_keras_metric	../keras_classifier.py	/^def as_keras_metric(method):$/;"	kind:function	line:124
+auc_pr	../keras_classifier.py	/^def auc_pr(y_true, y_pred, curve='PR'):$/;"	kind:function	line:135
+auc_roc_plot	../keras_classifier.py	/^    def auc_roc_plot(X_test, y_test):$/;"	kind:function	line:395
+aug_type	../misc/urbansound_transferCNN.py	/^            aug_type = '\/ps_'$/;"	kind:variable	line:46
+aug_type	../misc/urbansound_transferCNN.py	/^            aug_type = '\/speed_'$/;"	kind:variable	line:44
+augment_file_blend	../wavtools.py	/^def augment_file_blend(file_name):$/;"	kind:function	line:561
+augment_file_vertical_roll	../wavtools.py	/^def augment_file_vertical_roll(spectrogram):$/;"	kind:function	line:581
+augment_folder_time_shift	../wavtools.py	/^def augment_folder_time_shift(min_overlap, num_augmentations_per_clip):$/;"	kind:function	line:492
+augment_gaussian_noise	../wavtools.py	/^def augment_gaussian_noise(spectrogram):$/;"	kind:function	line:601
+augment_time_shift	../wavtools.py	/^def augment_time_shift(file_name, desired_duration, min_overlap, num_augmentations_per_clip):$/;"	kind:function	line:441
+augs	../misc/urbansound_transferCNN.py	/^augs = [1.07, 0.81, 2, 2.5]$/;"	kind:variable	line:40
+base_line_dir	../misc/bat_detect_exploration.py	/^base_line_dir = '\/home\/dgabutler\/CMEECourseWork\/Project\/Sandbox\/batdetect\/bat_train\/data\/baselines\/'$/;"	kind:variable	line:83
+base_model	../misc/vgg16_from_phil.py	/^base_model = VGG16(weights='imagenet',$/;"	kind:variable	line:41
+bat_detect_exploration.py	../misc/bat_detect_exploration.py	1;"	kind:file	line:1
+batch_size	../keras_classifier.py	/^batch_size = 16$/;"	kind:variable	line:995
+batch_size	../misc/vgg16_from_phil.py	/^    batch_size=32,$/;"	kind:variable	line:27
+batch_size	../misc/vgg16_from_phil.py	/^    batch_size=32,$/;"	kind:variable	line:36
+birds	../misc/kahl_code_exploration.py	/^birds = [src_dir + bird + '\/' for bird in sorted(os.listdir(src_dir))][:MAX_SPECIES]$/;"	kind:variable	line:199
+bulg_train_files	../misc/bat_detect_exploration.py	/^bulg_train_files = np.load(file='\/home\/dgabutler\/CMEECourseWork\/Project\/Sandbox\/batdetect\/bat_train\/data\/train_test_split\/test_set_bulgaria\/train_files.npy')$/;"	kind:variable	line:25
+bulg_train_positions	../misc/bat_detect_exploration.py	/^bulg_train_positions = np.load(file='\/home\/dgabutler\/CMEECourseWork\/Project\/Sandbox\/batdetect\/bat_train\/data\/train_test_split\/test_set_bulgaria\/train_pos.npy')$/;"	kind:variable	line:128
+call_containing_files	../misc/mcr_SVM_preproc.py	/^call_containing_files = glob.glob('..\/..\/Data\/unclipped-whinnies\/*WAV')$/;"	kind:variable	line:13
+callbacks	../misc/vgg16_from_phil.py	/^                    callbacks=callbacks_list)$/;"	kind:variable	line:104
+callbacks_list	../misc/vgg16_from_phil.py	/^callbacks_list = [checkpoint, dynamic_lr]$/;"	kind:variable	line:91
+center	../misc/mcr_SVM_preproc.py	/^center = 11$/;"	kind:variable	line:68
+changeSampleRate	../misc/kahl_code_exploration.py	/^def changeSampleRate(sig, rate):$/;"	kind:function	line:26
+checkpoint	../misc/vgg16_from_phil.py	/^checkpoint = ModelCheckpoint(filepath, monitor='val_acc', verbose=1, save_best_only=True, mode='max')$/;"	kind:variable	line:87
+chunk_length_ms	../misc/bat_detect_exploration.py	/^chunk_length_ms = 3870$/;"	kind:variable	line:12
+chunk_name	../misc/bat_detect_exploration.py	/^    chunk_name = "chunk{0}.wav".format(i)$/;"	kind:variable	line:18
+chunks	../misc/bat_detect_exploration.py	/^chunks = make_chunks(myaudio, chunk_length_ms)$/;"	kind:variable	line:13
+class_mode	../misc/vgg16_from_phil.py	/^    class_mode='categorical',$/;"	kind:variable	line:28
+class_mode	../misc/vgg16_from_phil.py	/^    class_mode='categorical',$/;"	kind:variable	line:37
+clip_long_into_snippets	../wavtools.py	/^def clip_long_into_snippets(file_name, duration):$/;"	kind:function	line:51
+clip_noncall_sections	../wavtools.py	/^def clip_noncall_sections(praat_files):$/;"	kind:function	line:224
+clip_whinnies	../wavtools.py	/^def clip_whinnies(praat_files, desired_duration):$/;"	kind:function	line:184
+column_headings	../misc/mcr_SVM_preproc.py	/^column_headings = ['filename', 'start', 'end', 'label']$/;"	kind:variable	line:12
+compile_dataset	../keras_classifier.py	/^def compile_dataset(run_type, sr):$/;"	kind:function	line:903
+compile_model	../kfoldcrossval.py	/^def compile_model():$/;"	kind:function	line:100
+create_model	../optimising_keras.py	/^def create_model(x_train, y_train, x_test, y_test):$/;"	kind:function	line:101
+custom_add_files_to_dataset	../keras_classifier.py	/^def custom_add_files_to_dataset(folder, dataset, example_type, sr, denoise=False, normalize=False, augment=False):$/;"	kind:function	line:871
+custom_add_files_to_dataset	../wavtools.py	/^def custom_add_files_to_dataset(folder, dataset, example_type, sr, denoise=False, normalize=False, augment=False):$/;"	kind:function	line:317
+custom_out	../misc/vgg16_from_phil.py	/^custom_out = Dense(21, activation='softmax')(x)$/;"	kind:variable	line:52
+custom_precision	../keras_classifier.py	/^def custom_precision(y_true, y_pred, threshold):$/;"	kind:function	line:66
+custom_recall	../keras_classifier.py	/^def custom_recall(y_true, y_pred, threshold):$/;"	kind:function	line:48
+data	../kfoldcrossval.py	/^def data(run_type, train_perc, sr):$/;"	kind:function	line:22
+data	../misc/urbansound_transferCNN.py	/^data = pd.read_csv('..\/Data\/UrbanSound8K\/metadata\/UrbanSound8K.csv', delimiter=',', encoding="utf-8-sig")$/;"	kind:variable	line:28
+data	../optimising_keras.py	/^                                        data=data,$/;"	kind:variable	line:178
+data	../optimising_keras.py	/^def data():$/;"	kind:function	line:19
+data_set	../misc/bat_detect_exploration.py	/^data_set = '\/home\/dgabutler\/CMEECourseWork\/Project\/Sandbox\/batdetect\/bat_train\/data\/train_test_split\/test_set_' + test_set + '.npz'$/;"	kind:variable	line:81
+denoise	../wavtools.py	/^def denoise(spec_noisy):$/;"	kind:function	line:339
+denoise_dataset	../wavtools.py	/^def denoise_dataset(dataset):$/;"	kind:function	line:354
+df	../misc/urbansound_transferCNN.py	/^df = np.zeros(shape=(13000,2), dtype=object) # dataset$/;"	kind:variable	line:55
+df_idx	../misc/urbansound_transferCNN.py	/^df_idx = 0$/;"	kind:variable	line:58
+dir	../misc/urbansound_transferCNN.py	/^        dir = '..\/Data\/UrbanSound8K\/augmented\/fold' + str(i+1) + aug_type + str(int(aug*100))$/;"	kind:variable	line:47
+do_augmentation	../wavtools.py	/^def do_augmentation(mag_spec, sr, roll=True, noise=True, noise_samples=True):$/;"	kind:function	line:504
+dst_dir	../misc/kahl_code_exploration.py	/^                    dst_dir = spec_dir + "noise\/" + bird.split("\/")[-2] + "\/"$/;"	kind:variable	line:225
+dst_dir	../misc/kahl_code_exploration.py	/^                    dst_dir = spec_dir + bird.split("\/")[-2] + "\/"$/;"	kind:variable	line:223
+duration	../misc/mcr_SVM_preproc.py	/^        duration = format(duration, '.3f')$/;"	kind:variable	line:60
+duration	../misc/mcr_SVM_preproc.py	/^        duration = frames\/float(rate)$/;"	kind:variable	line:59
+dynamic_lr	../misc/vgg16_from_phil.py	/^dynamic_lr = LearningRateScheduler(scheduler, verbose=1)$/;"	kind:variable	line:82
+element	../misc/bat_detect_exploration.py	/^    element = np.array(([[(float(decimal.Decimal(random.randrange(0,file_duration*100000000))\/100000000))]]))$/;"	kind:variable	line:51
+end_times	../misc/mcr_SVM_preproc.py	/^    end_times = [round(time\/1000, 3) for time in end_times[1]]$/;"	kind:variable	line:32
+end_times	../misc/mcr_SVM_preproc.py	/^    end_times = wavtools.whinny_endtimes_from_praatfile('..\/..\/Data\/praat-files\/'+wavname+'.TextGrid')$/;"	kind:variable	line:28
+epochs	../misc/vgg16_from_phil.py	/^                    epochs=40,$/;"	kind:variable	line:102
+extract_features	../misc/lasagne_test.py	/^def extract_features(parent_dir,sub_dirs,file_ext="*.wav",bands = 128, frames = 128):$/;"	kind:function	line:19
+file_duration	../misc/bat_detect_exploration.py	/^file_duration = testwav.duration_seconds # = 3.87 (for ms, use len(testwav))$/;"	kind:variable	line:42
+filename_to_localdatetime	../wavtools.py	/^def filename_to_localdatetime(filename):$/;"	kind:function	line:29
+filepath	../misc/vgg16_from_phil.py	/^filepath = "..\/Data\/vgg16_checkpoint.hdf5"$/;"	kind:variable	line:86
+filewriter	../misc/mcr_SVM_preproc.py	/^                filewriter = csv.writer(csvfile, delimiter=',')$/;"	kind:variable	line:50
+filewriter	../misc/mcr_SVM_preproc.py	/^        filewriter = csv.writer(csvfile, delimiter=',')$/;"	kind:variable	line:17
+filewriter	../misc/mcr_SVM_preproc.py	/^        filewriter = csv.writer(csvfile, delimiter=',')$/;"	kind:variable	line:40
+filewriter	../misc/mcr_SVM_preproc.py	/^        filewriter = csv.writer(csvfile, delimiter=',')$/;"	kind:variable	line:64
+filt	../misc/mcr_SVM_preproc.py	/^filt = 0$/;"	kind:variable	line:70
+filter_isolated_cells	../misc/kahl_code_exploration.py	/^def filter_isolated_cells(array, struct):$/;"	kind:function	line:111
+filts	../misc/mcr_SVM_preproc.py	/^filts = np.full((513,40),0.)$/;"	kind:variable	line:71
+flat	../misc/urbansound_transferCNN.py	/^flat = df.flattened$/;"	kind:variable	line:162
+frames	../misc/mcr_SVM_preproc.py	/^        frames = f.getnframes()$/;"	kind:variable	line:57
+generate_negative_examples	../wavtools.py	/^def generate_negative_examples(noncall_files, desired_length):$/;"	kind:function	line:255
+getMagSpec	../misc/kahl_code_exploration.py	/^def getMagSpec(sig, rate, winlen, winstep, NFFT):$/;"	kind:function	line:41
+get_multi_spec	../misc/kahl_code_exploration.py	/^def get_multi_spec(path, seconds=3, overlap=2, minlen=3, winlen=0.05, winstep=0.00585, NFFT=840):$/;"	kind:function	line:58
+hard_negative_miner	../keras_classifier.py	/^def hard_negative_miner(wav_folder, threshold_confidence, model):$/;"	kind:function	line:825
+has_monkey	../misc/kahl_code_exploration.py	/^def has_monkey(spec, threshold=16):$/;"	kind:function	line:122
+horizontal_flip	../misc/vgg16_from_phil.py	/^        horizontal_flip=True)$/;"	kind:variable	line:22
+i	../misc/mcr_SVM_preproc.py	/^        i = 0$/;"	kind:variable	line:47
+img	../misc/kahl_code_exploration.py	/^    img = np.clip(img, 0.0, 1.0)$/;"	kind:variable	line:189
+include_top	../misc/vgg16_from_phil.py	/^                   include_top=False,$/;"	kind:variable	line:42
+input_shape	../misc/vgg16_from_phil.py	/^                   input_shape=(224, 224, 3))$/;"	kind:variable	line:43
+job_idx	../misc/urbansound_transferCNN.py	/^job_idx = 0$/;"	kind:variable	line:59
+kahl_code_exploration.py	../misc/kahl_code_exploration.py	1;"	kind:file	line:1
+keras_classifier.py	../keras_classifier.py	1;"	kind:file	line:1
+kfoldcrossval	../kfoldcrossval.py	/^def kfoldcrossval(run_type, sr): $/;"	kind:function	line:160
+kfoldcrossval.py	../kfoldcrossval.py	1;"	kind:file	line:1
+lasagne_test.py	../misc/lasagne_test.py	1;"	kind:file	line:1
+left	../misc/mcr_SVM_preproc.py	/^left = 9$/;"	kind:variable	line:67
+load_keras_model	../keras_classifier.py	/^def load_keras_model(dataset, model_name):$/;"	kind:function	line:438
+load_mag_spec	../wavtools.py	/^def load_mag_spec(path, sr, winlen=0.025, winstep=0.01, NFFT=2048, denoise=True, normalize=True):$/;"	kind:function	line:270
+loaded_data_tr	../misc/bat_detect_exploration.py	/^loaded_data_tr = np.load(data_set)$/;"	kind:variable	line:94
+loaded_model	../main.py	/^loaded_model = keras_classifier.load_keras_model('D_mined_aug_tb_denoised', 'e50_b16')$/;"	kind:variable	line:19
+loss	../misc/vgg16_from_phil.py	/^              loss='categorical_crossentropy',$/;"	kind:variable	line:95
+main.py	../main.py	1;"	kind:file	line:1
+max_evals	../optimising_keras.py	/^                                        max_evals=5,$/;"	kind:variable	line:180
+max_vals	../misc/urbansound_transferCNN.py	/^max_vals = []$/;"	kind:variable	line:164
+mcr_SVM_preproc.py	../misc/mcr_SVM_preproc.py	1;"	kind:file	line:1
+metric_max	../kfoldcrossval.py	/^        def metric_max(metric):$/;"	kind:function	line:174
+metrics	../misc/vgg16_from_phil.py	/^              metrics=['accuracy'])$/;"	kind:variable	line:96
+model	../misc/bat_detect_exploration.py	/^model = clss.Classifier(params)$/;"	kind:variable	line:110
+model	../misc/vgg16_from_phil.py	/^model = Model(inputs=base_model.input, outputs=custom_out)$/;"	kind:variable	line:55
+model_dir	../misc/bat_detect_exploration.py	/^model_dir = '\/home\/dgabutler\/CMEECourseWork\/Project\/Sandbox\/batdetect\/bat_train\/data\/models\/'$/;"	kind:variable	line:85
+myaudio	../misc/bat_detect_exploration.py	/^myaudio = AudioSegment.from_file("\/home\/dgabutler\/CMEECourseWork\/Project\/Data\/whinnys\/5A383EF0.WAV", "wav")$/;"	kind:variable	line:11
+n_steps	../misc/urbansound_transferCNN.py	/^n_steps = 2 #-1, -2, 2, 1$/;"	kind:variable	line:124
+n_steps	../misc/urbansound_transferCNN.py	/^n_steps = 2.5 #-2.5, -3.5, 2.5, 3.5$/;"	kind:variable	line:143
+name	../keras_classifier.py	/^name = 'D_original'$/;"	kind:variable	line:999
+non_endtimes_from_praatfile	../wavtools.py	/^def non_endtimes_from_praatfile(praat_file):$/;"	kind:function	line:157
+non_starttimes_from_praatfile	../wavtools.py	/^def non_starttimes_from_praatfile(praat_file):$/;"	kind:function	line:130
+norf_train_positions	../misc/bat_detect_exploration.py	/^norf_train_positions = np.load(file='\/home\/dgabutler\/CMEECourseWork\/Project\/Sandbox\/batdetect\/bat_train\/data\/train_test_split\/test_set_norfolk\/train_pos.npy')$/;"	kind:variable	line:127
+num_calls	../misc/mcr_SVM_preproc.py	/^    num_calls = len(start_times)$/;"	kind:variable	line:44
+num_epochs	../keras_classifier.py	/^num_epochs = 10$/;"	kind:variable	line:996
+num_examples	../wavtools.py	/^def num_examples(dataset, example_type):$/;"	kind:function	line:41
+optimising_keras.py	../optimising_keras.py	1;"	kind:file	line:1
+other_endtimes_from_praatfile	../wavtools.py	/^def other_endtimes_from_praatfile(praat_file):$/;"	kind:function	line:410
+other_starttimes_from_praatfile	../wavtools.py	/^def other_starttimes_from_praatfile(praat_file):$/;"	kind:function	line:384
+params	../misc/bat_detect_exploration.py	/^params = DataSetParams()$/;"	kind:variable	line:103
+praat_files	../keras_classifier.py	/^praat_files = sorted(os.listdir('\/home\/dgabutler\/Work\/CMEEProject\/Data\/praat-files'))$/;"	kind:variable	line:971
+praat_files	../main.py	/^praat_files = sorted(os.listdir('\/home\/dgabutler\/Work\/CMEEProject\/Data\/praat-files'))$/;"	kind:variable	line:24
+precision	../keras_classifier.py	/^    def precision(y_true, y_pred):$/;"	kind:function	line:88
+precision	../kfoldcrossval.py	/^    def precision(y_true, y_pred):$/;"	kind:function	line:128
+precision	../optimising_keras.py	/^def precision(y_true, y_pred, threshold):$/;"	kind:function	line:84
+precision_threshold	../keras_classifier.py	/^def precision_threshold(threshold=0.5):$/;"	kind:function	line:87
+ps	../misc/urbansound_transferCNN.py	/^    ps = librosa.feature.melspectrogram(y=y, sr=sr)$/;"	kind:variable	line:70
+ps	../misc/urbansound_transferCNN.py	/^    ps = librosa.feature.melspectrogram(y=y_changed, sr=sr)$/;"	kind:variable	line:112
+ps	../misc/urbansound_transferCNN.py	/^    ps = librosa.feature.melspectrogram(y=y_changed, sr=sr)$/;"	kind:variable	line:133
+ps	../misc/urbansound_transferCNN.py	/^    ps = librosa.feature.melspectrogram(y=y_changed, sr=sr)$/;"	kind:variable	line:152
+ps	../misc/urbansound_transferCNN.py	/^    ps = librosa.feature.melspectrogram(y=y_changed, sr=sr)$/;"	kind:variable	line:93
+ps	../spect.py	/^ps = librosa.feature.melspectrogram(y=y, sr=sr)$/;"	kind:variable	line:8
+rate	../misc/mcr_SVM_preproc.py	/^        rate = f.getframerate()$/;"	kind:variable	line:58
+rate	../misc/urbansound_transferCNN.py	/^rate = 0.81 $/;"	kind:variable	line:103
+rate	../misc/urbansound_transferCNN.py	/^rate = 1.07 # replace with 0.81 and execute again$/;"	kind:variable	line:84
+raw_audio_dir	../misc/bat_detect_exploration.py	/^raw_audio_dir = '\/home\/dgabutler\/CMEECourseWork\/Project\/Sandbox\/batdetect\/bat_train\/data\/projwav\/'$/;"	kind:variable	line:82
+recall	../keras_classifier.py	/^    def recall(y_true, y_pred):$/;"	kind:function	line:106
+recall	../kfoldcrossval.py	/^    def recall(y_true, y_pred):$/;"	kind:function	line:141
+recall	../optimising_keras.py	/^def recall(y_true, y_pred, threshold):$/;"	kind:function	line:70
+recall_threshold	../keras_classifier.py	/^def recall_threshold(threshold = 0.5):$/;"	kind:function	line:105
+rescale	../misc/vgg16_from_phil.py	/^        rescale=1.\/255,$/;"	kind:variable	line:19
+result_dir	../misc/bat_detect_exploration.py	/^result_dir = '\/home\/dgabutler\/CMEECourseWork\/Project\/Sandbox\/batdetect\/bat_train\/results\/'$/;"	kind:variable	line:84
+right	../misc/mcr_SVM_preproc.py	/^right = 15$/;"	kind:variable	line:69
+scheduler	../misc/vgg16_from_phil.py	/^def scheduler(epoch):$/;"	kind:function	line:59
+search_file_for_monkeys_ONE_NODE_OUTPUT	../keras_classifier.py	/^def search_file_for_monkeys_ONE_NODE_OUTPUT(file_name, threshold_confidence, wav_folder, model, sr, denoise=False, standardise=False, tidy=True, full_verbose=True, hnm=False, summary_file=False):$/;"	kind:function	line:638
+search_file_for_monkeys_TWO_NODE_OUTPUT	../keras_classifier.py	/^def search_file_for_monkeys_TWO_NODE_OUTPUT(file_name, threshold_confidence, wav_folder, model, denoise=True, standardise=True, tidy=True, full_verbose=True, hnm=False, summary_file=False):$/;"	kind:function	line:458
+search_file_list_for_monkeys	../keras_classifier.py	/^def search_file_list_for_monkeys(file_names_list, wav_folder, threshold_confidence, model):$/;"	kind:function	line:860
+search_folder_for_monkeys	../keras_classifier.py	/^def search_folder_for_monkeys(wav_folder, threshold_confidence, model, sr):$/;"	kind:function	line:835
+shear_range	../misc/vgg16_from_phil.py	/^        shear_range=0.2,$/;"	kind:variable	line:20
+shuffle	../misc/vgg16_from_phil.py	/^    shuffle=False)$/;"	kind:variable	line:29
+shuffle	../misc/vgg16_from_phil.py	/^    shuffle=False)$/;"	kind:variable	line:38
+spec_cnt	../misc/kahl_code_exploration.py	/^        spec_cnt = 0$/;"	kind:variable	line:211
+specs_from_folder	../spect.py	/^def specs_from_folder(folder_name):$/;"	kind:function	line:21
+spect.py	../spect.py	1;"	kind:file	line:1
+spects_only	../misc/urbansound_transferCNN.py	/^spects_only = np.delete(df, 1, 1)$/;"	kind:variable	line:163
+sr	../keras_classifier.py	/^sr = 44100$/;"	kind:variable	line:997
+standardise_inputs	../wavtools.py	/^def standardise_inputs(dataset):$/;"	kind:function	line:369
+start_times	../misc/mcr_SVM_preproc.py	/^        start_times = wavtools.whinny_starttimes_from_praatfile('..\/..\/Data\/praat-files\/'+wavname+'.TextGrid')$/;"	kind:variable	line:24
+start_times	../misc/mcr_SVM_preproc.py	/^    start_times = [round(time\/1000, 3) for time in start_times[1]]$/;"	kind:variable	line:31
+target_size	../misc/vgg16_from_phil.py	/^    target_size=(224, 224),$/;"	kind:variable	line:26
+target_size	../misc/vgg16_from_phil.py	/^    target_size=(224, 224),$/;"	kind:variable	line:35
+test_datagen	../misc/vgg16_from_phil.py	/^test_datagen = ImageDataGenerator(rescale=1.\/255)$/;"	kind:variable	line:31
+test_durations	../misc/bat_detect_exploration.py	/^test_durations = np.load(file='\/home\/dgabutler\/CMEECourseWork\/Project\/Sandbox\/batdetect\/bat_train\/data\/train_test_split\/test_set_norfolk\/test_durations.npy')$/;"	kind:variable	line:124
+test_positions	../misc/bat_detect_exploration.py	/^test_positions = np.load(file='\/home\/dgabutler\/CMEECourseWork\/Project\/Sandbox\/batdetect\/bat_train\/data\/train_test_split\/test_set_norfolk\/test_pos.npy')$/;"	kind:variable	line:125
+test_set	../misc/bat_detect_exploration.py	/^test_set = 'project'    # if 'project', my data. if 'uk', their data$/;"	kind:variable	line:80
+test_set	../misc/vgg16_from_phil.py	/^test_set = test_datagen.flow_from_directory($/;"	kind:variable	line:33
+testwav	../misc/bat_detect_exploration.py	/^testwav = AudioSegment.from_wav("\/home\/dgabutler\/CMEECourseWork\/Project\/Sandbox\/batdetect\/bat_train\/data\/projwav\/01.wav")$/;"	kind:variable	line:41
+total_specs	../misc/kahl_code_exploration.py	/^    total_specs = 0$/;"	kind:variable	line:204
+train_datagen	../misc/vgg16_from_phil.py	/^train_datagen = ImageDataGenerator($/;"	kind:variable	line:18
+train_durations	../misc/bat_detect_exploration.py	/^train_durations = [file_duration] * train_files.size$/;"	kind:variable	line:44
+train_durations	../misc/bat_detect_exploration.py	/^train_durations = loaded_data_tr['train_durations']$/;"	kind:variable	line:97
+train_durations	../misc/bat_detect_exploration.py	/^train_durations = np.load(file='\/home\/dgabutler\/CMEECourseWork\/Project\/Sandbox\/batdetect\/bat_train\/data\/train_test_split\/test_set_norfolk\/train_durations.npy')$/;"	kind:variable	line:126
+train_files	../misc/bat_detect_exploration.py	/^train_files = [os.path.splitext(x)[0] for x in train_files]$/;"	kind:variable	line:32
+train_files	../misc/bat_detect_exploration.py	/^train_files = loaded_data_tr['train_files']$/;"	kind:variable	line:96
+train_files	../misc/bat_detect_exploration.py	/^train_files = np.asarray(train_files)$/;"	kind:variable	line:34
+train_files	../misc/bat_detect_exploration.py	/^train_files = sorted(os.listdir('\/home\/dgabutler\/CMEECourseWork\/Project\/Sandbox\/batdetect\/bat_train\/data\/projwav\/'))$/;"	kind:variable	line:30
+train_perc	../keras_classifier.py	/^train_perc = 0.8$/;"	kind:variable	line:994
+train_pos	../misc/bat_detect_exploration.py	/^train_pos = []$/;"	kind:variable	line:49
+train_pos	../misc/bat_detect_exploration.py	/^train_pos = loaded_data_tr['train_pos']$/;"	kind:variable	line:95
+train_pos	../misc/bat_detect_exploration.py	/^train_pos = np.asarray(train_pos)$/;"	kind:variable	line:54
+train_simple_keras	../keras_classifier.py	/^def train_simple_keras(dataset, name, train_perc, num_epochs, batch_size):$/;"	kind:function	line:138
+train_simple_keras_ONE_NODE_OUTPUT	../keras_classifier.py	/^def train_simple_keras_ONE_NODE_OUTPUT(dataset, name, train_perc, num_epochs, batch_size, sr):$/;"	kind:function	line:264
+training_behaviour_plot	../keras_classifier.py	/^    def training_behaviour_plot(metric):$/;"	kind:function	line:213
+training_behaviour_plot	../keras_classifier.py	/^    def training_behaviour_plot(metric):$/;"	kind:function	line:364
+training_set	../misc/vgg16_from_phil.py	/^training_set = train_datagen.flow_from_directory($/;"	kind:variable	line:24
+trials	../optimising_keras.py	/^                                        trials=Trials())$/;"	kind:variable	line:181
+trim_empty_rows_from_ndarray	../misc/urbansound_transferCNN.py	/^def trim_empty_rows_from_ndarray(ndarray):$/;"	kind:function	line:15
+trimmed_df	../misc/urbansound_transferCNN.py	/^trimmed_df = trim_empty_rows_from_ndarray(df)$/;"	kind:variable	line:79
+urbansound_transferCNN.py	../misc/urbansound_transferCNN.py	1;"	kind:file	line:1
+validation_data	../misc/vgg16_from_phil.py	/^                    validation_data=test_set,$/;"	kind:variable	line:103
+vgg16_from_phil.py	../misc/vgg16_from_phil.py	1;"	kind:file	line:1
+view_mag_and_mel	../keras_classifier.py	/^def view_mag_and_mel(mag_spec, mel_spec):$/;"	kind:function	line:1133
+view_mag_spec	../keras_classifier.py	/^def view_mag_spec(mag_spec):$/;"	kind:function	line:1121
+view_mel_spec	../keras_classifier.py	/^def view_mel_spec(mel_spec):$/;"	kind:function	line:1127
+wav_files	../misc/kahl_code_exploration.py	/^    wav_files = [bird + wav for wav in sorted(os.listdir(bird))]$/;"	kind:variable	line:207
+wav_folder	../main.py	/^wav_folder = '\/home\/dgabutler\/Work\/CMEEProject\/Data\/unclipped-whinnies\/shady-lane\/'$/;"	kind:variable	line:211
+wavname	../misc/mcr_SVM_preproc.py	/^    wavname = os.path.basename(os.path.splitext(wav)[0])$/;"	kind:variable	line:21
+wavtools.py	../wavtools.py	1;"	kind:file	line:1
+whinny_endtimes_from_praatfile	../wavtools.py	/^def whinny_endtimes_from_praatfile(praat_file):$/;"	kind:function	line:101
+whinny_starttimes_from_praatfile	../wavtools.py	/^def whinny_starttimes_from_praatfile(praat_file):$/;"	kind:function	line:72
+windows	../misc/lasagne_test.py	/^def windows(data, window_size):$/;"	kind:function	line:13
+wrapper	../keras_classifier.py	/^    def wrapper(self, args, **kwargs):$/;"	kind:function	line:126
+x	../misc/vgg16_from_phil.py	/^x = Dense(4096, activation='relu')(x)$/;"	kind:variable	line:50
+x	../misc/vgg16_from_phil.py	/^x = Dense(4096, activation='relu')(x)$/;"	kind:variable	line:51
+x	../misc/vgg16_from_phil.py	/^x = Flatten()(x)$/;"	kind:variable	line:49
+x	../misc/vgg16_from_phil.py	/^x = base_model.output$/;"	kind:variable	line:48
+y	../misc/urbansound_transferCNN.py	/^    y = librosa.to_mono(np.ndarray.transpose(y))$/;"	kind:variable	line:109
+y	../misc/urbansound_transferCNN.py	/^    y = librosa.to_mono(np.ndarray.transpose(y))$/;"	kind:variable	line:130
+y	../misc/urbansound_transferCNN.py	/^    y = librosa.to_mono(np.ndarray.transpose(y))$/;"	kind:variable	line:149
+y	../misc/urbansound_transferCNN.py	/^    y = librosa.to_mono(np.ndarray.transpose(y))$/;"	kind:variable	line:69
+y	../misc/urbansound_transferCNN.py	/^    y = librosa.to_mono(np.ndarray.transpose(y))$/;"	kind:variable	line:90
+y_changed	../misc/urbansound_transferCNN.py	/^    y_changed = librosa.effects.pitch_shift(y, sr, n_steps=n_steps)$/;"	kind:variable	line:131
+y_changed	../misc/urbansound_transferCNN.py	/^    y_changed = librosa.effects.pitch_shift(y, sr, n_steps=n_steps)$/;"	kind:variable	line:150
+y_changed	../misc/urbansound_transferCNN.py	/^    y_changed = librosa.effects.time_stretch(y, rate=rate)$/;"	kind:variable	line:110
+y_changed	../misc/urbansound_transferCNN.py	/^    y_changed = librosa.effects.time_stretch(y, rate=rate)$/;"	kind:variable	line:91
+y_changed	../misc/urbansound_transferCNN.py	/^    y_changed = y_changed[:132300]$/;"	kind:variable	line:111
+y_changed	../misc/urbansound_transferCNN.py	/^    y_changed = y_changed[:132300]$/;"	kind:variable	line:132
+y_changed	../misc/urbansound_transferCNN.py	/^    y_changed = y_changed[:132300]$/;"	kind:variable	line:151
+y_changed	../misc/urbansound_transferCNN.py	/^    y_changed = y_changed[:132300]$/;"	kind:variable	line:92
+zoom_range	../misc/vgg16_from_phil.py	/^        zoom_range=0.2,$/;"	kind:variable	line:21

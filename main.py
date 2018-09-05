@@ -10,10 +10,47 @@ import glob
 import random
 import pickle
 import time
+import glob
+import os
 
 sys.path.insert(0, '/home/dgabutler/Work/CMEEProject/Code')
 import wavtools   # contains custom functions e.g. denoising
 import keras_classifier
+
+###### DATA PROCESSING
+# check target folders are empty, if script is re-run:
+# clipped folders:
+folders = glob.glob('../Data/clipped-whinnies-*/')
+for folder in folders:
+    files = glob.glob(folder+'*.WAV')
+    for f in files:
+        os.remove(f)
+# augmented folder:
+files = glob.glob('../Data/aug-timeshifted/*.WAV')
+for f in files:
+    os.remove(f)
+#
+# clipping positives:
+praat_files = sorted(os.listdir('../Data/praat-files'))
+# LOCATION 1: OSA
+# positives:
+wavtools.clip_whinnies(praat_files, 3000, '../Data/unclipped-whinnies-osa','../Data/clipped-whinnies-osa')
+# LOCATION 2: SHADY
+# positives:
+wavtools.clip_whinnies(praat_files, 3000, '../Data/unclipped-whinnies-shady','../Data/clipped-whinnies-shady')
+# LOCATION 3: CORCOVADO
+# positives:
+wavtools.clip_whinnies(praat_files, 3000, '../Data/unclipped-whinnies-corcovado','../Data/clipped-whinnies-corcovado')
+# LOCATION 4: CATAPPA
+# positives:
+wavtools.clip_whinnies(praat_files, 3000, '../Data/unclipped-whinnies-catappa','../Data/clipped-whinnies-catappa')
+
+# TIME-SHIFT AUGMENT:
+#
+wavtools.augment_folder_time_shift('unclipped-whinnies-osa', 0.2, 2)
+wavtools.augment_folder_time_shift('unclipped-whinnies-catappa', 0.2, 2)
+wavtools.augment_folder_time_shift('unclipped-whinnies-shady', 0.2, 2)
+
 
 ###### LOADING TRAINED MODEL
 loaded_model = keras_classifier.load_keras_model('D_mined_aug_tb_denoised', 'e50_b16')
