@@ -1,4 +1,4 @@
-# only essential scripts to get version working
+# essential scripts to get version working
 
 import numpy as np # following all used by train_simple_keras
 import keras 
@@ -32,15 +32,8 @@ from   sklearn.preprocessing import LabelEncoder # added for single output layer
 from   sklearn.preprocessing import scale
 from   sklearn.metrics import roc_curve # used in train_simple_
 from   sklearn.metrics import auc
-
-import functools    # these three used in as_keras_metric
-from   keras import backend as K
-import tensorflow as tf
-
-# added during experimentation
-import numpy as np 
-from   sklearn.utils import shuffle # used by do_augmentation
-from   sklearn.metrics import precision_recall_curve
+from   keras import backend as K # used in metric functions (precision, recall, F1)
+from   sklearn.utils import shuffle # used when adding noise-sample augment
 
 # custom modules
 import wavtools # contains custom functions e.g. denoising
