@@ -1,0 +1,9 @@
+# gitignore for windows (monkey_env is not name of virtualenv in linux environment)
+
+# Ignore all .pyc files
+*.pyc
+
+# Ignore the following folders:
+_pycache_\
+misc\
+monkey_env\
